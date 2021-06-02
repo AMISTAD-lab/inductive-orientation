@@ -55,7 +55,7 @@ def getSimplex(clf, X_test, classes):
     sum = 0
     for i in range(simplex_vector.size):
         sum += simplex_vector[i]
-    print("SUM" , sum)
+    #print("SUM" , sum)
 
     return simplex_vector
 

@@ -72,3 +72,18 @@ print("Angle of alignment 1,10: ", computeAngle(PD, PD10))
 print("Angle of alignment 3, 10: ", computeAngle(PD3, PD10))
 
 # print("Entropy List: ", computeEntropy(model, dataset, holdout_set_percentage, num_datasets))
+
+# find the variance of a sequence of PD's
+def computeVariance(num_PD):
+    list_of_PD = []
+    for i in range(num_PD):
+        list_of_PD.append(computePD(model, dataset, holdout_set_percentage, num_datasets))
+    # list_of_PD.append(PD3)
+    # list_of_PD.append(PD10)
+    variance = np.var(list_of_PD)
+    return variance
+
+print("Variance of KNN1 after 5 runs: ", computeVariance(5))
+# Variance of KNN1 after 3 runs:  6.774035123372077e-06
+# Variance of KNN1 after 5 runs:  6.7740351233720765e-06
+# Variance of KNN1 after 3 runs, KNN3, KNN10:  7.27654940851929e-06
