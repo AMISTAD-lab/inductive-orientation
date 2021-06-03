@@ -166,26 +166,33 @@ def getLdm(clf, X_train, X_test, y_train, classes, num_columns, proportion_of_da
 
 def getSparseLdm(clf, X_train, X_test, y_train, classes, num_columns, proportion_of_dataset):
 
-    # Initialize a labelling distribution matrix to be constructed
-    ldm = []
+    # # Initialize a labelling distribution matrix to be constructed
+    # ldm = []
 
-    # Iterate through all training sets (there is a total of num_columns training
-    # sets)
-    for _ in range(num_columns):
-        # Shuffle the training labels randomly to generate different training
-        # sets for each iteration
-        # random.shuffle(y_train)
-        clf.classes_ = classes
-        # Train the model using the current training set
-        num_entries = int(proportion_of_dataset * len(X_train))
-        random_X, random_y = random_uniform(X_train, y_train, num_entries)
+    # # Iterate through all training sets (there is a total of num_columns training
+    # # sets)
+    # for _ in range(num_columns):
+    #     # Shuffle the training labels randomly to generate different training
+    #     # sets for each iteration
+    #     # random.shuffle(y_train)
+    #     clf.classes_ = classes
+    #     # Train the model using the current training set
+    #     num_entries = int(proportion_of_dataset * len(X_train))
+    #     random_X, random_y = random_uniform(X_train, y_train, num_entries)
 
-        clf.fit(random_X, random_y)
-        # Obtain simplex vector for current training set
-        current_simplex_vector = getSparseSimplex(clf, X_test, classes)
-        ldm.append(current_simplex_vector)
+    #     clf.fit(random_X, random_y)
+    #     # Obtain simplex vector for current training set
+    #     current_simplex_vector = getSparseSimplex(clf, X_test, classes)
+    #     ldm.append(current_simplex_vector)
+    ldm = getLdm(clf, X_train, X_test, y_train, classes, num_columns, proportion_of_dataset)
+    for x in ldm:
+        index = np.argmax(x)
+        for i in range(len(x)):
+            x[i] = 0
+        x[index] = 1
 
     return ldm
+
 
 #data generation
 def random_uniform(X_train, y_train, num_entries):
