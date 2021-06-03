@@ -74,6 +74,64 @@ def getSimplex(clf, X_test, classes):
 
     return simplex_vector
 
+
+def getSparseSimplex(clf, X_test, classes):
+
+    num_holdout_samples = len(X_test)
+    num_classes = len(classes)
+
+    # Initialize a list of all possible labellings
+    all_labels = list(itertools.product(classes, repeat = num_holdout_samples))
+    simplex_vector = []
+
+    y_pred_prob = clf.predict_proba(X_test)
+    y_pred = clf.predict(X_test)
+
+    # sparse_y_pred is matrix of sparse probabilities in the same form as y_pred_prob
+    sparse_y_pred = [[0 for i in range(num_classes)] for j in range(num_holdout_samples)]
+
+    for i in range(len(y_pred)):
+        sparse_y_pred[i][y_pred[i]] = 1
+
+
+    sum_probs = 0
+
+    # Iterate through all_labels and compute probabilities for simplex_vector
+    for i in range(len(all_labels)):
+        # Initialize current_prob with a small value (since we're going to take
+        # products)
+        current_prob = 0
+        # Iterate through the current combination of labels
+        for j in range(len(all_labels[i])):
+            for class_index in classes:
+                if ((all_labels[i][j] == class_index)): # and (class_index < len(y_pred_prob[j]))):
+                    # If the current probability is 0, then just add 0 to current prob
+                    if sparse_y_pred[j][class_index] == 0:
+                        current_prob += 0
+                    elif sparse_y_pred[j][class_index] == 1:
+                        current_prob += -math.log10(sparse_y_pred[j][class_index] - 0.00001)
+                    else:
+                        current_prob += -math.log10(sparse_y_pred[j][class_index])
+
+        # Compute sum used for normalization at the end
+        sum_probs += current_prob
+        simplex_vector.append(current_prob)
+
+    # Normalization step
+    # If sum_probs == 0, divide by 1 instead
+    if sum_probs == 0:
+        simplex_vector = np.array(simplex_vector)
+    else:
+        simplex_vector = np.array(simplex_vector) / sum_probs
+    # simplex_vector = np.array(simplex_vector)
+
+    sum = 0
+    for i in range(simplex_vector.size):
+        sum += simplex_vector[i]
+    #print("SUM" , sum)
+
+    return simplex_vector
+
 '''
 getLdm() takes in a classifier (clf), a set of training features (X_train),
 a set of test features (X_test), a set of training labels (y_train), a list of
@@ -103,6 +161,31 @@ def getLdm(clf, X_train, X_test, y_train, classes, num_columns, ):
         ldm.append(current_simplex_vector)
 
     return ldm
+
+
+def getSparseLdm(clf, X_train, X_test, y_train, classes, num_columns, ):
+
+    # Initialize a labelling distribution matrix to be constructed
+    ldm = []
+
+    # Iterate through all training sets (there is a total of num_columns training
+    # sets)
+    for _ in range(num_columns):
+        # Shuffle the training labels randomly to generate different training
+        # sets for each iteration
+        # random.shuffle(y_train)
+        clf.classes_ = classes
+        # Train the model using the current training set
+        num_entries = int(.5 * len(X_train))
+        random_X, random_y = random_uniform(X_train, y_train, num_entries)
+
+        clf.fit(random_X, random_y)
+        # Obtain simplex vector for current training set
+        current_simplex_vector = getSparseSimplex(clf, X_test, classes)
+        ldm.append(current_simplex_vector)
+
+    return ldm
+
 #data generation
 def random_uniform(X_train, y_train, num_entries):
     indices = np.arange(len(X_train))
@@ -118,6 +201,13 @@ def computeLdm(model, dataset, holdout_set_percentage, num_datasets):
     X_train, X_test, y_train, y_test = train_test_split(dataset.data, dataset.target, test_size = holdout_set_percentage)
 
     matrix = getLdm(model, X_train, X_test, y_train, [0, 1, 2], num_datasets)
+
+    return matrix
+
+def computeSparseLdm(model, dataset, holdout_set_percentage, num_datasets):
+    X_train, X_test, y_train, y_test = train_test_split(dataset.data, dataset.target, test_size = holdout_set_percentage)
+
+    matrix = getSparseLdm(model, X_train, X_test, y_train, [0, 1, 2], num_datasets)
 
     return matrix
 
@@ -141,6 +231,11 @@ def computePD(model, dataset, holdout_set_percentage, num_datasets):
     return np.mean(LDM, axis = 0)
 
 
+def computeSparsePD(model, dataset, holdout_set_percentage, num_datasets):
+    LDM = computeSparseLdm(model, dataset, holdout_set_percentage, num_datasets)
+    return np.mean(LDM, axis = 0)
+
+
 # returns angle in radians
 def computeAngle(PD1, PD2):
     unit_vector_1 = PD1/np.linalg.norm(PD1)
@@ -161,6 +256,13 @@ def computeNPD(num_PD, model, dataset, holdout_set_percentage, num_datasets):
         list_of_PD.append(computePD(model, dataset, holdout_set_percentage, num_datasets))
     return list_of_PD
 
+# create a list of N PD's
+def computeSparseNPD(num_PD, model, dataset, holdout_set_percentage, num_datasets):
+    list_of_PD = []
+    for i in range(num_PD):
+        list_of_PD.append(computeSparsePD(model, dataset, holdout_set_percentage, num_datasets))
+    return list_of_PD
+
 # find the variance of a sequence of PD's
 def computeVariance(list_of_PD):
     # list_of_PD.append(PD3)
@@ -179,6 +281,20 @@ def varianceUpToN(max,modelName, model, dataset, holdout_set_percentage, num_dat
         variance_per_run.append(current_variance)
         #print("Variance of " + modelName + " after ", i, " runs: ", current_variance)
     return run_number, variance_per_run
+
+
+# Finds the variances for set of N inductive orientation vectors as N increases from 2 to max
+def varianceUpToN(max,modelName, model, dataset, holdout_set_percentage, num_datasets):
+    run_number = list(range(2,max))
+    variance_per_run = []
+    list_of_PD = computeSparseNPD(1, model, dataset, holdout_set_percentage, num_datasets)
+    for i in range(2,max):
+        list_of_PD.append(computeSparsePD(model, dataset, holdout_set_percentage, num_datasets))
+        current_variance = computeVariance(list_of_PD)
+        variance_per_run.append(current_variance)
+        #print("Variance of " + modelName + " after ", i, " runs: ", current_variance)
+    return run_number, variance_per_run
+
 
 def plotHeatMap(ldm):
     # Transpose LDM generated so that simplex vectors are column vectors
