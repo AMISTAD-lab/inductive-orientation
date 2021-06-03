@@ -29,6 +29,12 @@ def getSimplex(clf, X_test, classes):
     y_pred_prob = clf.predict_proba(X_test)
     y_pred = clf.predict(X_test)
 
+    sparse_y_pred = [[0 for i in range(num_classes)] for j in range(num_holdout_samples)]
+
+    for i in range(len(y_pred)):
+        sparse_y_pred[i][y_pred[i]] = 1
+
+
     sum_probs = 0
 
     # Iterate through all_labels and compute probabilities for simplex_vector
@@ -39,7 +45,7 @@ def getSimplex(clf, X_test, classes):
         # Iterate through the current combination of labels
         for j in range(len(all_labels[i])):
             for class_index in classes:
-                if ((all_labels[i][j] == class_index) and (class_index < len(y_pred_prob[j]))):
+                if ((all_labels[i][j] == class_index)): # and (class_index < len(y_pred_prob[j]))):
                     # If the current probability is 0, then just add 0 to current prob
                     if y_pred_prob[j][class_index] == 0:
                         current_prob += 0
