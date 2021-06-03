@@ -3,6 +3,14 @@ import random
 import math
 import numpy as np
 from scipy.stats import entropy
+from sklearn import datasets
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+# AMISTAD Lab - Overfitting/Underfitting Team
+# Code for Labelling Distribution Matrix Tests
+
 
 '''
 getSimplex()) takes in a classifier (clf), a set of test features (X_test), and a list of possible classes
@@ -98,3 +106,75 @@ def random_uniform(X_train, y_train, num_entries):
     shuffled_y = [y_train[i] for i in indices]
     
     return shuffled_X, shuffled_y
+
+def computeLdm(model, dataset, holdout_set_percentage, num_datasets):
+    X_train, X_test, y_train, y_test = train_test_split(dataset.data, dataset.target, test_size = holdout_set_percentage)
+
+    matrix = getLdm(model, X_train, X_test, y_train, [0, 1, 2], num_datasets)
+
+    return matrix
+
+
+def computeEntropy(model, dataset, holdout_set_percentage, num_datasets):
+
+    matrix = computeLdm(model, dataset, holdout_set_percentage, num_datasets)
+
+    entropy_list = []
+
+    for i in range(len(matrix)):
+        current_entropy = entropy(matrix[i])
+        entropy_list.append(current_entropy)
+
+    return entropy_list
+
+
+
+def computePD(model, dataset, holdout_set_percentage, num_datasets):
+    LDM = computeLdm(model, dataset, holdout_set_percentage, num_datasets)
+    return np.mean(LDM, axis = 0)
+
+
+# returns angle in radians
+def computeAngle(PD1, PD2):
+    unit_vector_1 = PD1/np.linalg.norm(PD1)
+    unit_vector_2 = PD2/np.linalg.norm(PD2)
+    dot_product = np.dot(unit_vector_1, unit_vector_2)
+    
+    if dot_product >= 1:
+        return 0
+    
+    angle = np.arccos(dot_product)
+    angle = round(angle, 7)
+    return angle
+
+# create a list of N PD's
+def computeNPD(num_PD, model, dataset, holdout_set_percentage, num_datasets):
+    list_of_PD = []
+    for i in range(num_PD):
+        list_of_PD.append(computePD(model, dataset, holdout_set_percentage, num_datasets))
+    return list_of_PD
+
+# find the variance of a sequence of PD's
+def computeVariance(list_of_PD):
+    # list_of_PD.append(PD3)
+    # list_of_PD.append(PD10)
+    variance = np.var(list_of_PD)
+    return variance
+
+# Finds the variances for set of N inductive orientation vectors as N increases from 2 to max
+def varianceUpToN(max,modelName, model, dataset, holdout_set_percentage, num_datasets):
+    run_number = list(range(2,max))
+    variance_per_run = []
+    list_of_PD = computeNPD(1, model, dataset, holdout_set_percentage, num_datasets)
+    for i in range(2,max):
+        list_of_PD.append(computePD(model, dataset, holdout_set_percentage, num_datasets))
+        current_variance = computeVariance(list_of_PD)
+        variance_per_run.append(current_variance)
+        #print("Variance of " + modelName + " after ", i, " runs: ", current_variance)
+    return run_number, variance_per_run
+
+def plotHeatMap(ldm):
+    # Transpose LDM generated so that simplex vectors are column vectors
+    ldmTransposed = [list(i) for i in zip(*ldm)]
+    plt.imshow(ldmTransposed, cmap='hot', interpolation='nearest')
+    plt.show()
