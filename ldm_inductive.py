@@ -198,24 +198,24 @@ def random_uniform(X_train, y_train, num_entries):
     
     return shuffled_X, shuffled_y
 
-def computeLdm(model, dataset, holdout_set_percentage, num_datasets):
+def computeLdm(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset):
     X_train, X_test, y_train, y_test = train_test_split(dataset.data, dataset.target, test_size = holdout_set_percentage)
 
-    matrix = getLdm(model, X_train, X_test, y_train, [0, 1, 2], num_datasets)
+    matrix = getLdm(model, X_train, X_test, y_train, [0, 1, 2], num_datasets,proportion_of_dataset)
 
     return matrix
 
-def computeSparseLdm(model, dataset, holdout_set_percentage, num_datasets):
+def computeSparseLdm(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset):
     X_train, X_test, y_train, y_test = train_test_split(dataset.data, dataset.target, test_size = holdout_set_percentage)
 
-    matrix = getSparseLdm(model, X_train, X_test, y_train, [0, 1, 2], num_datasets)
+    matrix = getSparseLdm(model, X_train, X_test, y_train, [0, 1, 2], num_datasets, proportion_of_dataset)
 
     return matrix
 
 
-def computeEntropy(model, dataset, holdout_set_percentage, num_datasets):
+def computeEntropy(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset):
 
-    matrix = computeLdm(model, dataset, holdout_set_percentage, num_datasets)
+    matrix = computeLdm(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset)
 
     entropy_list = []
 
@@ -227,13 +227,13 @@ def computeEntropy(model, dataset, holdout_set_percentage, num_datasets):
 
 
 
-def computePD(model, dataset, holdout_set_percentage, num_datasets):
-    LDM = computeLdm(model, dataset, holdout_set_percentage, num_datasets)
+def computePD(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset):
+    LDM = computeLdm(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset)
     return np.mean(LDM, axis = 0)
 
 
-def computeSparsePD(model, dataset, holdout_set_percentage, num_datasets):
-    LDM = computeSparseLdm(model, dataset, holdout_set_percentage, num_datasets)
+def computeSparsePD(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset):
+    LDM = computeSparseLdm(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset)
     return np.mean(LDM, axis = 0)
 
 

@@ -54,7 +54,7 @@ num_datasets = 5
 # fig.show()
 
 
-AdaboostLDM = ldm_inductive.computeSparseLdm(adaboostClassifier, dataset,holdout_set_percentage, 2)
+AdaboostLDM = ldm_inductive.computeSparseLdm(adaboostClassifier, dataset,holdout_set_percentage, 2, 0.3)
 ldm_inductive.plotHeatMap(AdaboostLDM)
 
 
