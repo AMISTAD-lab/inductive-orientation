@@ -8,6 +8,7 @@ from sklearn.naive_bayes import GaussianNB, MultinomialNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+import seaborn as sns
 # AMISTAD Lab - Overfitting/Underfitting Team
 # Code for Labelling Distribution Matrix Tests
 
@@ -139,7 +140,7 @@ possible classes to be classified into (classes), and the number of information
 resources to consider (num_columns), and returns a labelling distribution matrix
 where every row corresponds to a different training set.
 '''
-def getLdm(clf, X_train, X_test, y_train, classes, num_columns, ):
+def getLdm(clf, X_train, X_test, y_train, classes, num_columns, proportion_of_dataset):
 
     # Initialize a labelling distribution matrix to be constructed
     ldm = []
@@ -152,7 +153,7 @@ def getLdm(clf, X_train, X_test, y_train, classes, num_columns, ):
         # random.shuffle(y_train)
         clf.classes_ = classes
         # Train the model using the current training set
-        num_entries = int(.5 * len(X_train))
+        num_entries = int(proportion_of_dataset * len(X_train))
         random_X, random_y = random_uniform(X_train, y_train, num_entries)
 
         clf.fit(random_X, random_y)
@@ -163,7 +164,7 @@ def getLdm(clf, X_train, X_test, y_train, classes, num_columns, ):
     return ldm
 
 
-def getSparseLdm(clf, X_train, X_test, y_train, classes, num_columns, ):
+def getSparseLdm(clf, X_train, X_test, y_train, classes, num_columns, proportion_of_dataset):
 
     # Initialize a labelling distribution matrix to be constructed
     ldm = []
@@ -176,7 +177,7 @@ def getSparseLdm(clf, X_train, X_test, y_train, classes, num_columns, ):
         # random.shuffle(y_train)
         clf.classes_ = classes
         # Train the model using the current training set
-        num_entries = int(.5 * len(X_train))
+        num_entries = int(proportion_of_dataset * len(X_train))
         random_X, random_y = random_uniform(X_train, y_train, num_entries)
 
         clf.fit(random_X, random_y)
@@ -284,7 +285,7 @@ def varianceUpToN(max,modelName, model, dataset, holdout_set_percentage, num_dat
 
 
 # Finds the variances for set of N inductive orientation vectors as N increases from 2 to max
-def varianceUpToN(max,modelName, model, dataset, holdout_set_percentage, num_datasets):
+def sparseVarianceUpToN(max,modelName, model, dataset, holdout_set_percentage, num_datasets):
     run_number = list(range(2,max))
     variance_per_run = []
     list_of_PD = computeSparseNPD(1, model, dataset, holdout_set_percentage, num_datasets)
@@ -299,5 +300,8 @@ def varianceUpToN(max,modelName, model, dataset, holdout_set_percentage, num_dat
 def plotHeatMap(ldm):
     # Transpose LDM generated so that simplex vectors are column vectors
     ldmTransposed = [list(i) for i in zip(*ldm)]
-    plt.imshow(ldmTransposed, cmap='hot', interpolation='nearest')
-    plt.show()
+    map = sns.heatmap(ldmTransposed, linewidth=0.)
+    plt.savefig("ldm_Adaboost_sparse_2")
+    # ldmTransposed = [list(i) for i in zip(*ldm)]
+    # plt.imshow(ldmTransposed, cmap='hot', interpolation='nearest')
+    # plt.show()
