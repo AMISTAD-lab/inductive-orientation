@@ -29,6 +29,7 @@ def getSimplex(clf, X_test, classes):
     y_pred_prob = clf.predict_proba(X_test)
     y_pred = clf.predict(X_test)
 
+    # sparse_y_pred is matrix of sparse probabilities in the same form as y_pred_prob
     sparse_y_pred = [[0 for i in range(num_classes)] for j in range(num_holdout_samples)]
 
     for i in range(len(y_pred)):
