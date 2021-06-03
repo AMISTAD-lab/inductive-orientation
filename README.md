@@ -10,7 +10,7 @@ To generate an inductive orientation vector (the Pd vector) use
 To generate an Labeling Distribution Matrix (LDM) use
   LDM = ldm_inductive.computeLdm(model, dataset, holdout_set_percentage, num_datasets)
  
-Some functions are taken from work done by past AMISTAD Lab students as part of the "The Labeling Distribution Matrix: A Tool for Estmiating Machine Learning Algorithm Capacity"
+Some functions are taken from work done by past AMISTAD Lab students as part of the ["The Labeling Distribution Matrix: A Tool for Estmiating Machine Learning Algorithm Capacity"](https://arxiv.org/abs/1912.10597#:~:text=version%2C%20v2)
 Currently functions are
  - ldm_inductive.getSimplex
  - ldm_inductive.getLdm
