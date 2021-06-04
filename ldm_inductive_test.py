@@ -60,9 +60,9 @@ proportion_of_dataset = 0.3
 
 #print(ldm_inductive.computeSparseLdm(model, dataset, holdout_set_percentage, num_datasets, .3))
 
-LDM = ldm_inductive.computeSparseLdm(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset)
-values, counts = ldm_inductive.computeGoodTuring(LDM)
-print("values ", values, "counts ",counts)
+# LDM = ldm_inductive.computeSparseLdm(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset)
+# values, counts = ldm_inductive.computeGoodTuring(LDM)
+# print("values ", values, "counts ",counts)
 
 #Variance of KNN10 = [9.137961117571029e-06, 8.349985786171377e-06, 8.379253161284915e-06, 8.058209553702347e-06, 8.468089304752554e-06, 1.0544526062336985e-05, 1.2928675731668204e-05, 1.2495125962812751e-05, 1.2630258349416205e-05, 1.2438188323105969e-05, 1.3318601513500767e-05, 1.4063566520757905e-05, 1.3542885706658916e-05, 1.3341192530215229e-05, 1.3945064660067002e-05, 1.3743442507122094e-05, 1.3749165136106825e-05, 1.3466481600764552e-05, 1.3449799906269434e-05, 1.3904721177772961e-05, 1.3580599084391104e-05, 1.3284661520868537e-05, 1.3288266922693952e-05, 1.3027697650721075e-05, 1.2931151128001173e-05, 1.2841756199556818e-05, 1.2625051875407363e-05, 
 #1.2481672682690747e-05]
@@ -72,3 +72,5 @@ print("values ", values, "counts ",counts)
 # Variance of KNN1 after 3 runs:  6.774035123372077e-06
 # Variance of KNN1 after 5 runs:  6.7740351233720765e-06
 # Variance of KNN1 after 3 runs, KNN3, KNN10:  7.27654940851929e-06
+
+ldm_inductive.sparseVarianceChangingDataset(10,"KNN1", model, dataset, holdout_set_percentage, proportion_of_dataset)

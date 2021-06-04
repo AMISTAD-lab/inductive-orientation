@@ -258,17 +258,17 @@ def computeAngle(PD1, PD2):
     return angle
 
 # create a list of N PD's
-def computeNPD(num_PD, model, dataset, holdout_set_percentage, num_datasets):
+def computeNPD(num_PD, model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset):
     list_of_PD = []
     for i in range(num_PD):
-        list_of_PD.append(computePD(model, dataset, holdout_set_percentage, num_datasets))
+        list_of_PD.append(computePD(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset))
     return list_of_PD
 
 # create a list of N PD's
-def computeSparseNPD(num_PD, model, dataset, holdout_set_percentage, num_datasets):
+def computeSparseNPD(num_PD, model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset):
     list_of_PD = []
     for i in range(num_PD):
-        list_of_PD.append(computeSparsePD(model, dataset, holdout_set_percentage, num_datasets))
+        list_of_PD.append(computeSparsePD(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset))
     return list_of_PD
 
 # find the variance of a sequence of PD's
@@ -301,6 +301,21 @@ def sparseVarianceUpToN(max,modelName, model, dataset, holdout_set_percentage, n
         current_variance = computeVariance(list_of_PD)
         variance_per_run.append(current_variance)
         #print("Variance of " + modelName + " after ", i, " runs: ", current_variance)
+    return run_number, variance_per_run
+
+
+# Finds the variances for set of N inductive orientation vectors as N increases from 2 to max and num_datasets incerases each time
+def sparseVarianceChangingDataset(max,modelName, model, dataset, holdout_set_percentage, proportion_of_dataset):
+    run_number = list(range(2,max))
+    variance_per_run = []
+    num_datasets = 1
+    list_of_PD = computeSparseNPD(1, model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset)
+    for i in range(2,max):
+        num_datasets += 1
+        list_of_PD.append(computeSparsePD(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset))
+        current_variance = computeVariance(list_of_PD)
+        variance_per_run.append(current_variance)
+        print("Variance of " + modelName + " after ", i, " runs: ", current_variance, " with ", num_datasets, " num_datasets")
     return run_number, variance_per_run
 
 
