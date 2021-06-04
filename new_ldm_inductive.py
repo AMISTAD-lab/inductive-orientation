@@ -35,8 +35,9 @@ def random_uniform(X_train, y_train, num_entries, i=0):
 
 '''splitting the dataset - no overlap between columns'''
 def split_dataset(X_train, y_train, num_entries, i=0):
-    subset_X = X_train[i:i+num_entries]
-    subset_y = y_train[i:i+num_entries]
+    start_index = i*num_entries
+    subset_X = X_train[start_index:start_index+num_entries]
+    subset_y = y_train[start_index:start_index+num_entries]
     return subset_X, subset_y
 
 #Getting the LDM, and PD
