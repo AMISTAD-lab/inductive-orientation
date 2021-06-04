@@ -73,4 +73,6 @@ proportion_of_dataset = 0.3
 # Variance of KNN1 after 5 runs:  6.7740351233720765e-06
 # Variance of KNN1 after 3 runs, KNN3, KNN10:  7.27654940851929e-06
 
-ldm_inductive.sparseVarianceChangingDataset(10,"KNN1", model, dataset, holdout_set_percentage, proportion_of_dataset)
+#ldm_inductive.sparseVarianceChangingDataset(10,"KNN1", model, dataset, holdout_set_percentage, proportion_of_dataset)
+
+ldm_inductive.sparseVarianceUpToN(10,"KNN1", model, dataset, holdout_set_percentage, proportion_of_dataset, proportion_of_dataset)

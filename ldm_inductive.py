@@ -140,10 +140,14 @@ possible classes to be classified into (classes), and the number of information
 resources to consider (num_columns), and returns a labelling distribution matrix
 where every row corresponds to a different training set.
 '''
-def getLdm(clf, X_train, X_test, y_train, classes, num_columns, proportion_of_dataset):
+def getLdm(clf, X_train, X_test, y_train, classes, num_columns, proportion_of_dataset, split_data=False):
 
     # Initialize a labelling distribution matrix to be constructed
     ldm = []
+
+    if split_data:
+        data_per_col = len(X_train)//num_columns
+        
 
     # Iterate through all training sets (there is a total of num_columns training
     # sets)
@@ -292,12 +296,12 @@ def varianceUpToN(max,modelName, model, dataset, holdout_set_percentage, num_dat
 
 
 # Finds the variances for set of N inductive orientation vectors as N increases from 2 to max
-def sparseVarianceUpToN(max,modelName, model, dataset, holdout_set_percentage, num_datasets):
+def sparseVarianceUpToN(max,modelName, model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset):
     run_number = list(range(2,max))
     variance_per_run = []
-    list_of_PD = computeSparseNPD(1, model, dataset, holdout_set_percentage, num_datasets)
+    list_of_PD = computeSparseNPD(1, model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset)
     for i in range(2,max):
-        list_of_PD.append(computeSparsePD(model, dataset, holdout_set_percentage, num_datasets))
+        list_of_PD.append(computeSparsePD(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset))
         current_variance = computeVariance(list_of_PD)
         variance_per_run.append(current_variance)
         #print("Variance of " + modelName + " after ", i, " runs: ", current_variance)

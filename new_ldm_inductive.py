@@ -8,15 +8,23 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 #data generation
-def random_uniform(X_train, y_train, num_entries):
+
+#random sampling
+def random_uniform(X_train, y_train, num_entries, i=0):
     indices = np.arange(len(X_train))
-    # print(type(indices))
     np.random.shuffle(indices)
     indices[:num_entries] #no replacement
     shuffled_X = [X_train[i] for i in indices]
     shuffled_y = [y_train[i] for i in indices]
     
     return shuffled_X, shuffled_y
+
+#splitting the dataset - no overlap between columns
+def split_dataset(X_train, y_train, num_entries, i=0):
+    subset_X = X_train[i:i+num_entries]
+    subset_y = y_train[i:i+num_entries]
+
+    return subset_X, subset_y
 
 '''
 getSimplex()) takes in a classifier (clf), a set of test features (X_test), and a list of possible classes
@@ -91,21 +99,27 @@ where every row corresponds to a different training set.
 def getLDM(clf, X_train, X_test, y_train, classes, num_columns, proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
     # Initialize a labelling distribution matrix to be constructed
     ldm = []
-    # Iterate through all training sets (there is a total of num_columns training
-    # sets)
-    for _ in range(num_columns):
+    # Iterate through all training sets (there is a total of num_columns training sets)
+
+    for i in range(num_columns):
         # Shuffle the training labels randomly to generate different training
         # sets for each iteration
         # random.shuffle(y_train)
         clf.classes_ = classes
         # Train the model using the current training set
-        num_entries = int(proportion_of_dataset * len(X_train))
-        random_X, random_y = data_generation(X_train, y_train, num_entries)
+        if data_generation == random_uniform:
+            num_entries = int(proportion_of_dataset * len(X_train))
 
-        clf.fit(random_X, random_y)
+        elif data_generation == split_dataset:
+            num_entries = len(X_train)//num_columns
+
+        subset_X, subset_y = data_generation(X_train, y_train, num_entries, i=i) 
+
+        clf.fit(subset_X, subset_y)
         # Obtain simplex vector for current training set
         current_simplex_vector = getSimplex(clf, X_test, classes)
         ldm.append(current_simplex_vector)
+
     if sparse == True:
         for x in ldm:
             index = np.argmax(x)
