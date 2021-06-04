@@ -18,5 +18,13 @@ proportion_of_dataset = 0.3
 
 X_train, X_test, y_train, y_test = train_test_split(dataset.data, dataset.target, test_size = holdout_set_percentage)
 
-LDM = ldm_inductive.getLDM(model, X_train, X_test, y_train, classes=[0,1,2], num_columns = num_datasets)
+LDM = ldm_inductive.getLDM(model, X_train, X_test, y_train, num_columns = num_datasets)
 Pd = ldm_inductive.computePD(LDM)
+
+list_of_PD_sparse = ldm_inductive.computeNPD(5, model, X_train, X_test, y_train, num_columns = num_datasets)
+list_of_PD = ldm_inductive.computeNPD(5, model, X_train, X_test, y_train, num_columns = num_datasets, sparse=False)
+
+print("sparse")
+ldm_inductive.varianceUpToN(list_of_PD_sparse)
+print("not sparse")
+ldm_inductive.varianceUpToN(list_of_PD)

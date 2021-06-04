@@ -96,7 +96,7 @@ resources to consider (num_columns), and returns a labelling distribution matrix
 where every row corresponds to a different training set.
 '''
 
-def getLDM(clf, X_train, X_test, y_train, classes, num_columns, proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
+def getLDM(clf, X_train, X_test, y_train, num_columns, classes=[0,1,2], proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
     # Initialize a labelling distribution matrix to be constructed
     ldm = []
     # Iterate through all training sets (there is a total of num_columns training sets)
@@ -151,3 +151,30 @@ def computeAngle(PD1, PD2):
     angle = np.arccos(dot_product)
     angle = round(angle, 7)
     return angle
+
+# create a list of N PD's
+def computeNPD(num_PD, clf, X_train, X_test, y_train, num_columns, classes=[0,1,2], proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
+    list_of_PD = []
+
+    for i in range(num_PD):
+        LDM = getLDM(clf, X_train, X_test, y_train, num_columns, classes=classes, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
+        list_of_PD.append(computePD(LDM))
+
+    return list_of_PD
+
+# find the variance of a sequence of PD's
+def computeVariance(list_of_PD):
+    variance = np.var(list_of_PD)
+    return variance
+
+
+# Finds the variances for set of N inductive orientation vectors as N increases from 2 to max
+def varianceUpToN(list_of_PD):
+
+    variance_per_run = []
+
+    for i in range(1, len(list_of_PD)):
+        current_variance = computeVariance(list_of_PD[:i])
+        variance_per_run.append(current_variance)
+        print("Variance after ", i, " runs: ", current_variance)
+    return variance_per_run
