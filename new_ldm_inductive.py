@@ -26,67 +26,51 @@ def split_dataset(X_train, y_train, num_entries, i=0):
 
     return subset_X, subset_y
 
-'''
-getSimplex()) takes in a classifier (clf), a set of test features (X_test), and a list of possible classes
-to be classified into (classes), and returns a normalized probability distribution (a simplex vector)
-as a numpy array
-'''
-def getSimplex(clf, X_test, classes):
 
+# Helper function that takes in an input a model, a test dataset, and a list
+# of classes for the given classification problem, and computes its simplex
+# vector
+def getSimplex(clf, X_test, classes):
+    """
+    clf: the classifier to use (must implement predict_proba)
+    X_test: the holdout test data
+    classes: a list of possible classes that are classified
+    Returns a simplex vector as a numpy array, and the list of predicted labels
+    """
     num_holdout_samples = len(X_test)
     num_classes = len(classes)
+    y_pred_prob = clf.predict_proba(X_test)
+        #print("y_pred_prob", y_pred_prob)
+    # Generate a list of predicted labels to compute the differences
+    # in label assignment relative to the label assignment of the training dataset
+    predicted_labels_list = clf.predict(X_test)
 
-    # Initialize a list of all possible labellings
-    all_labels = list(itertools.product(classes, repeat = num_holdout_samples))
+    all_labels = list(itertools.product(classes, repeat=num_holdout_samples))
+         #print("all labels: ", all_labels[:1])
     simplex_vector = []
 
-    y_pred_prob = clf.predict_proba(X_test)
-    y_pred = clf.predict(X_test)
+    alpha = 0.000001 # Used for alpha smoothing
+    sum_probs = 0    # Used for normailization later
 
-    # sparse_y_pred is matrix of sparse probabilities in the same form as y_pred_prob
-    sparse_y_pred = [[0 for i in range(num_classes)] for j in range(num_holdout_samples)]
-
-    for i in range(len(y_pred)):
-        sparse_y_pred[i][y_pred[i]] = 1
-
-
-    sum_probs = 0
-
-    # Iterate through all_labels and compute probabilities for simplex_vector
-    for i in range(len(all_labels)):
-        # Initialize current_prob with a small value (since we're going to take
-        # products)
-        current_prob = 0
-        # Iterate through the current combination of labels
-        for j in range(len(all_labels[i])):
+    # Iterate through all_labels and calculate probabilities
+    # based on y_pred_prob values
+    for i in range(0, len(all_labels)):
+        #current_prob = alpha
+        current_prob = 1.0
+        for j in range(0, len(all_labels[i])):
             for class_index in classes:
-                if ((all_labels[i][j] == class_index)): # and (class_index < len(y_pred_prob[j]))):
-                    # If the current probability is 0, then just add 0 to current prob
-                    if y_pred_prob[j][class_index] == 0:
-                        current_prob += 0
-                    elif y_pred_prob[j][class_index] == 1:
-                        current_prob += -math.log10(y_pred_prob[j][class_index] - 0.00001)
-                    else:
-                        current_prob += -math.log10(y_pred_prob[j][class_index])
-
-        # Compute sum used for normalization at the end
+                if ((all_labels[i][j] == class_index) and (class_index < len(y_pred_prob[j]))):
+                        current_prob *= (alpha if y_pred_prob[j][class_index] == 0 else y_pred_prob[j][class_index])
+                        #current_prob = 0.000001 * 0.000001 if y_pred_prob[holdoutsamplei][class_index]
         sum_probs += current_prob
         simplex_vector.append(current_prob)
 
-    # Normalization step
-    # If sum_probs == 0, divide by 1 instead
-    if sum_probs == 0:
-        simplex_vector = np.array(simplex_vector)
-    else:
-        simplex_vector = np.array(simplex_vector) / sum_probs
-    # simplex_vector = np.array(simplex_vector)
+    #print("sum_probs", sum_probs)
+    # No need to Normalize?
+    #simplex_vector = np.array(simplex_vector) / sum_probs
+    simplex_vector = np.array(simplex_vector)
 
-    sum = 0
-    for i in range(simplex_vector.size):
-        sum += simplex_vector[i]
-    #print("SUM" , sum)
-
-    return simplex_vector
+    return simplex_vector, predicted_labels_list
 
 '''
 getLdm() takes in a classifier (clf), a set of training features (X_train),
