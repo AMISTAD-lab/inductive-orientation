@@ -24,7 +24,7 @@ returns:
     random_subset_y: a list of length num_entries with labels corresponding to training features
     in random_subset_y
 '''
-def random_uniform(X_train, y_train, num_entries):
+def random_uniform(X_train, y_train, num_entries, i=0):
     indices = np.arange(len(X_train))
     np.random.shuffle(indices)
     indices[:num_entries] #no replacement
@@ -118,7 +118,7 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, propo
     LDM = []
     # Iterate through all training sets (there is a total of num_columns training
     # sets)
-    for _ in range(num_datasets):
+    for i in range(num_datasets):
         # Shuffle the training labels randomly to generate different training
         # sets for each iteration
         # random.shuffle(y_train)
@@ -163,11 +163,11 @@ inputs:
 output:
     list_of_PD: a list of num_PD number of inductive orientation vectors (each of which is a np array)
 '''
-def computeNPD(num_PD, clf, X_train, X_test, y_train, num_columns, classes=[0,1,2], proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
+def computeNPD(num_PD, clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
     list_of_PD = []
 
     for i in range(num_PD):
-        LDM = getLDM(clf, X_train, X_test, y_train, num_columns, classes=classes, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
+        LDM = getLDM(clf, X_train, X_test, y_train, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
         list_of_PD.append(computePD(LDM))
 
     return list_of_PD
