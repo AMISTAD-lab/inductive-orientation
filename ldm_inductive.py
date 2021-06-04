@@ -319,6 +319,38 @@ def sparseVarianceChangingDataset(max,modelName, model, dataset, holdout_set_per
     return run_number, variance_per_run
 
 
+def variance_propdata(percentages, model, dataset, holdout_set_percentage, num_datasets, sparse):
+    if sparse == True:
+        return variance_propdata_Helper(percentages, model, dataset, holdout_set_percentage, num_datasets)
+    else:
+        return variance_propdata_sparseHelper(percentages, model, dataset, holdout_set_percentage, num_datasets)
+
+
+def variance_propdata_Helper(percentages, model, dataset, holdout_set_percentage, num_datasets):
+    percentages_list = []
+    variance_list = []
+    for i in percentages:
+        proportion_of_dataset = i
+        percentages_list.append(i)
+        current_ldm = computeLdm(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset)
+        current_variance = computeVariance(current_ldm)
+        variance_list.append(current_variance)
+        print("proportion of dataset: ", i, " the variance of the Pf's in the LDM with: ", num_datasets, "number of datasets is: ", current_variance)
+    return percentages_list, variance_list
+
+
+def variance_propdata_sparseHelper(percentages, model, dataset, holdout_set_percentage, num_datasets):
+    percentages_list = []
+    variance_list = []
+    for i in percentages:
+        proportion_of_dataset = i
+        percentages_list.append(i)
+        current_ldm = computeSparseLdm(model, dataset, holdout_set_percentage, num_datasets, proportion_of_dataset)
+        current_variance = computeVariance(current_ldm)
+        variance_list.append(current_variance)
+        print("proportion of dataset: ", i, " the variance of the Pf's in the LDM with: ", num_datasets, "number of datasets is: ", current_variance)
+    return percentages_list, variance_list
+
 def plotHeatMap(ldm):
     # Transpose LDM generated so that simplex vectors are column vectors
     ldmTransposed = [list(i) for i in zip(*ldm)]
