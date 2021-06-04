@@ -312,3 +312,29 @@ def plotHeatMap(ldm):
     # ldmTransposed = [list(i) for i in zip(*ldm)]
     # plt.imshow(ldmTransposed, cmap='hot', interpolation='nearest')
     # plt.show()
+
+#compute Good Turing
+#Let ldm be the sparse matrix for a set of information resources
+def computeGoodTuring(ldm):
+    #convert ldm to numpy array
+    LDM = np.array(ldm)
+ 
+    # for every element in the search space, counts the number of times element occurs
+    countPerElementinSearchSpace = np.sum(LDM, axis = 0)
+ 
+    #total number of observed elements
+    N = np.sum(countPerElementinSearchSpace)
+ 
+    #Let c be the number of times an element occurs
+    #Let Nc be the number of elements that occur c times
+    LDM_list = []
+    for vector in LDM:
+        index1 = np.argmax(vector)
+        LDM_list += [index1]
+    print(LDM_list)
+
+    LDM_list = np.array(LDM_list)
+
+    values, counts = np.unique(LDM_list, return_counts = True)
+    return values, counts
+
