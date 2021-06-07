@@ -27,6 +27,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.003) #give
 LDM = ldm_inductive.getLDM(model, X_train, X_test, y_train, classes=classes)
 print(LDM)
 Pd = ldm_inductive.computePD(LDM)
+adjusted_Pd = ldm_inductive.computeGoodTuring(LDM)
 
 list_of_PD_sparse = ldm_inductive.computeNPD(5, model, X_train, X_test, y_train, classes= classes)
 list_of_PD = ldm_inductive.computeNPD(5, model, X_train, X_test, y_train, sparse=False, classes=classes)

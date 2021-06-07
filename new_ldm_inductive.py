@@ -38,6 +38,7 @@ def random_uniform(X_train, y_train, num_entries, i=0):
     random_subset_X = X_train.iloc[indices]
     random_subset_y = y_train.iloc[indices]
     return random_subset_X, random_subset_y
+
 '''splitting the dataset - no overlap between columns'''
 def split_dataset(X_train, y_train, num_entries, i=0):
     start_index = i*num_entries
@@ -277,32 +278,37 @@ def computeAngle(PD1, PD2):
 computeGoodTuring is currently the first part of smoothing by good turing. 
 It tells us the frequency of each sequence. Each sequence is represented by their index in the inductive orientation simplex vector.
 input: a sparse LDM
-output:
-    values: the unique indices corresponding to a sequence of classifications
-    counts: the number the corresponding index/sequence of classification came up
+output: the Pd with its values adjusted according to the Good-Turing formula c_new = (c+1) N_c/N_c+1
 '''
 def computeGoodTuring(LDM):
     #convert ldm to numpy array
     LDM = np.array(LDM)
+    num_cols_LDM = len(LDM)
  
-    # for every element in the search space, counts the number of times element occurs
-    countPerElementinSearchSpace = np.sum(LDM, axis = 0)
+    # adds up all the "columns" in the LDM
+    sumColsLDM = np.sum(LDM, axis = 0)
  
-    #total number of observed elements
-    N = np.sum(countPerElementinSearchSpace)
- 
-    #Let c be the number of times an element occurs
-    #Let Nc be the number of elements that occur c times
-    LDM_list = []
-    for vector in LDM:
-        index1 = np.argmax(vector)
-        LDM_list += [index1]
-    print(LDM_list)
+    # values is an np array of unique values, 
+    # counts is the number of times each of these values occurs in sumColsLDM
+    values, counts = np.unique(sumColsLDM, return_counts = True)
 
-    LDM_list = np.array(LDM_list)
+    for i in range(len(sumColsLDM)):
+        c = sumColsLDM[i]
 
-    values, counts = np.unique(LDM_list, return_counts = True)
-    return values, counts
+        Nc = counts[np.where(values == c)]
+
+        if c+1 in values:
+            Nc1 = counts[np.where(values == c+1)]
+        else: 
+           Nc1 = 0
+
+        c_new = (c+1) * Nc1/Nc
+        sumColsLDM[i] = c_new
+
+    # convert adjusted counts to an average
+    adjustedPD = np.true_divide(sumColsLDM, num_cols_LDM)
+    return adjustedPD
+
 
 def plotHeatMap(LDM):
     # Transpose LDM generated so that simplex vectors are column vectors
