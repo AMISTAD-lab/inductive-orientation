@@ -30,9 +30,14 @@ def random_uniform(X_train, y_train, num_entries, i=0):
     indices[:num_entries] #no replacement
     random_subset_X = [X_train[i] for i in indices]
     random_subset_y = [y_train[i] for i in indices]
-    
     return random_subset_X, random_subset_y
-
+# def random_uniform(X_train, y_train, num_entries, i=0):
+#     indices = np.arange(len(X_train))
+#     np.random.shuffle(indices)
+#     indices[:num_entries] #no replacement
+#     random_subset_X = X_train.iloc[indices]
+#     random_subset_y = y_train.iloc[indices]
+#     return random_subset_X, random_subset_y
 '''splitting the dataset - no overlap between columns'''
 def split_dataset(X_train, y_train, num_entries, i=0):
     subset_X = X_train[i:i+num_entries]
@@ -221,6 +226,28 @@ def varianceUpToN(list_of_PD):
         print("Variance after ", i, " runs: ", current_variance)
     return variance_per_run
 
+
+'''
+variance_propdata finds the variance between columns of an LDM, not PD, as the proportion of dataset changes
+inputs:
+    percentages: a list of percentages in double 
+returns:
+    run_number: a list that records the size of the inductive orientation vectors PD's
+    variance_per_run: a list that gives the variance corresponding to the run_number
+'''
+def variance_propdata(percentages, clf, X_train, X_test, y_train,classes=[0,1,2], num_datasets=5, sparse=True, data_generation=random_uniform):
+    percentages_list = []
+    variance_list = []
+    for i in percentages:
+        proportion_of_dataset = i
+        percentages_list.append(i)
+        current_ldm = getLDM(clf, X_train, X_test, y_train, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
+        current_variance = computeVariance(current_ldm)
+        variance_list.append(current_variance)
+        print("proportion of dataset: ", i, " the variance of the Pf's in the LDM with: ", num_datasets, "number of datasets is: ", current_variance)
+    return percentages_list, variance_list
+
+
 '''
 computeAngle finds the radian angle between two inductive orientation vector using dot product
 input:
@@ -240,6 +267,38 @@ def computeAngle(PD1, PD2):
     angle = np.arccos(dot_product)
     angle = round(angle, 7)
     return angle
+
+#compute Good Turing
+'''
+computeGoodTuring is currently the first part of smoothing by good turing. 
+It tells us the frequency of each sequence. Each sequence is represented by their index in the inductive orientation simplex vector.
+input: a sparse LDM
+output:
+    values: the unique indices corresponding to a sequence of classifications
+    counts: the number the corresponding index/sequence of classification came up
+'''
+def computeGoodTuring(LDM):
+    #convert ldm to numpy array
+    LDM = np.array(LDM)
+ 
+    # for every element in the search space, counts the number of times element occurs
+    countPerElementinSearchSpace = np.sum(LDM, axis = 0)
+ 
+    #total number of observed elements
+    N = np.sum(countPerElementinSearchSpace)
+ 
+    #Let c be the number of times an element occurs
+    #Let Nc be the number of elements that occur c times
+    LDM_list = []
+    for vector in LDM:
+        index1 = np.argmax(vector)
+        LDM_list += [index1]
+    print(LDM_list)
+
+    LDM_list = np.array(LDM_list)
+
+    values, counts = np.unique(LDM_list, return_counts = True)
+    return values, counts
 
 def plotHeatMap(LDM):
     # Transpose LDM generated so that simplex vectors are column vectors
