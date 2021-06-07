@@ -59,13 +59,14 @@ def getSimplex(clf, X_test, classes):
     num_holdout_samples = len(X_test)
     num_classes = len(classes)
     y_pred_prob = clf.predict_proba(X_test)
-        #print("y_pred_prob", y_pred_prob)
     # Generate a list of predicted labels to compute the differences
     # in label assignment relative to the label assignment of the training dataset
-    predicted_labels_list = clf.predict(X_test)
+    # predicted_labels_list = clf.predict(X_test)
+    #print("num_holdout_samples: ", num_holdout_samples)
 
+    #computationally impossible for large numbers
     all_labels = list(itertools.product(classes, repeat=num_holdout_samples))
-         #print("all labels: ", all_labels[:1])
+
     simplex_vector = []
 
     alpha = 0.000001 # Used for alpha smoothing
@@ -76,6 +77,7 @@ def getSimplex(clf, X_test, classes):
     for i in range(0, len(all_labels)):
         #current_prob = alpha
         current_prob = 1.0
+        print("all labels: ", i, " len: ", len(all_labels[i]))
         for j in range(0, len(all_labels[i])):
             for class_index in classes:
                 if ((all_labels[i][j] == class_index) and (class_index < len(y_pred_prob[j]))):
@@ -84,10 +86,10 @@ def getSimplex(clf, X_test, classes):
         sum_probs += current_prob
         simplex_vector.append(current_prob)
 
-    #print("sum_probs", sum_probs)
     # No need to Normalize?
     #simplex_vector = np.array(simplex_vector) / sum_probs
     simplex_vector = np.array(simplex_vector)
+
 
     return simplex_vector
 
@@ -114,7 +116,7 @@ inputs:
 outpus:
     LDM: a 2D np array matrix, where LDM[i] gives a probability distribution vector trained on one particular subset of training data and tested on a fixed holdout set.
 '''
-def getLDM(clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
+def getLDM(clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.1, sparse=True, data_generation=random_uniform):
     # Initialize a labelling distribution matrix to be constructed
     LDM = []
     # Iterate through all training sets (there is a total of num_columns training
@@ -137,6 +139,7 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, propo
         # Obtain simplex vector for current training set
         current_simplex_vector = getSimplex(clf, X_test, classes)
         LDM.append(current_simplex_vector)
+
     if sparse == True:
         for x in LDM:
             index = np.argmax(x)
@@ -198,7 +201,7 @@ return:
     deviate from the average simplex vector
 '''
 def computeVariance(list_of_simplex):
-    variance = np.var(list_of_simplex)
+    variance = np.var(list_of_simplex, axis=0)
     return variance
 
 '''
