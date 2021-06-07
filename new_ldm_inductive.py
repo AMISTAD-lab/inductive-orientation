@@ -77,7 +77,7 @@ def getSimplex(clf, X_test, classes):
     for i in range(0, len(all_labels)):
         #current_prob = alpha
         current_prob = 1.0
-        print("all labels: ", i, " len: ", len(all_labels[i]))
+
         for j in range(0, len(all_labels[i])):
             for class_index in classes:
                 if ((all_labels[i][j] == class_index) and (class_index < len(y_pred_prob[j]))):
