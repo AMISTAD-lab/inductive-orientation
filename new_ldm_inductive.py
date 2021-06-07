@@ -61,9 +61,7 @@ outputs:
     simplex vector: a numpy array. each entry in the array includes the probability the classification 
     algorithm will give the corresponding sequence of labels as its prediction
 '''
-def getSimplex(clf, X_test, classes):
-    num_holdout_samples = len(X_test)
-    num_classes = len(classes)
+def getSimplex(clf, X_test, classes, all_labels):
     y_pred_prob = clf.predict_proba(X_test)
     # Generate a list of predicted labels to compute the differences
     # in label assignment relative to the label assignment of the training dataset
@@ -71,8 +69,6 @@ def getSimplex(clf, X_test, classes):
     #print("num_holdout_samples: ", num_holdout_samples)
 
     #computationally impossible for large numbers
-    all_labels = list(itertools.product(classes, repeat=num_holdout_samples))
-
     simplex_vector = []
 
     alpha = 0.000001 # Used for alpha smoothing
@@ -125,6 +121,9 @@ outpus:
 def getLDM(clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.1, sparse=True, data_generation=random_uniform):
     # Initialize a labelling distribution matrix to be constructed
     LDM = []
+    num_holdout_samples = len(X_test)
+    all_labels = list(itertools.product(classes, repeat=num_holdout_samples))
+    #print("this is all_labels ",all_labels)
     # Iterate through all training sets (there is a total of num_columns training
     # sets)
     for i in range(num_datasets):
@@ -133,6 +132,7 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, propo
         # random.shuffle(y_train)
         clf.classes_ = classes
         # Train the model using the current training set
+
         if data_generation == random_uniform:
             num_entries = int(proportion_of_dataset * len(X_train))
 
@@ -143,7 +143,7 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, propo
 
         clf.fit(subset_X, subset_y)
         # Obtain simplex vector for current training set
-        current_simplex_vector = getSimplex(clf, X_test, classes)
+        current_simplex_vector = getSimplex(clf, X_test, classes, all_labels)
         LDM.append(current_simplex_vector)
 
     if sparse == True:
