@@ -24,20 +24,20 @@ returns:
     random_subset_y: a list of length num_entries with labels corresponding to training features
     in random_subset_y
 '''
-def random_uniform(X_train, y_train, num_entries, i=0):
-    indices = np.arange(len(X_train))
-    np.random.shuffle(indices)
-    indices[:num_entries] #no replacement
-    random_subset_X = [X_train[i] for i in indices]
-    random_subset_y = [y_train[i] for i in indices]
-    return random_subset_X, random_subset_y
 # def random_uniform(X_train, y_train, num_entries, i=0):
 #     indices = np.arange(len(X_train))
 #     np.random.shuffle(indices)
-#     indices[:num_entries] #no replacement
-#     random_subset_X = X_train.iloc[indices]
-#     random_subset_y = y_train.iloc[indices]
+#     indices = indices[:num_entries] #no replacement
+#     random_subset_X = [X_train[i] for i in indices]
+#     random_subset_y = [y_train[i] for i in indices]
 #     return random_subset_X, random_subset_y
+def random_uniform(X_train, y_train, num_entries, i=0):
+    indices = np.arange(len(X_train))
+    np.random.shuffle(indices)
+    indices = indices[:num_entries] #no replacement
+    random_subset_X = X_train.iloc[indices]
+    random_subset_y = y_train.iloc[indices]
+    return random_subset_X, random_subset_y
 '''splitting the dataset - no overlap between columns'''
 def split_dataset(X_train, y_train, num_entries, i=0):
     start_index = i*num_entries
