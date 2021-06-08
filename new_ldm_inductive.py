@@ -147,7 +147,7 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, propo
         current_simplex_vector = getSimplex(clf, X_test, classes, all_labels)
         LDM.append(current_simplex_vector)
 
-    if sparse == True:
+    if sparse:
         for x in LDM:
             index = np.argmax(x)
             for i in range(len(x)):
