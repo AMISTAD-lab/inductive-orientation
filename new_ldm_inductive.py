@@ -156,6 +156,13 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, propo
 
     return LDM
 
+def computeNLDM(num_LDM, clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
+    list_of_LDM=[]
+    for i in range(num_LDM):
+        LDM = getLDM(clf, X_train, X_test, y_train, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
+        list_of_LDM.append(LDM)
+    return list_of_LDM
+
 '''
 computePD finds the inductive orientation vector(PD) of a LDM by taking the average of all the probability distribution simplex vectors
 input:
