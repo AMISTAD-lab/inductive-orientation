@@ -312,6 +312,10 @@ def computeGoodTuring(LDM):
 
 def simpleGoodTuring(LDM):
     #convert ldm to numpy array
+    PD = computePD(LDM)
+    if 1 in PD:
+        raise ValueError("PD cannot be completely sparse")
+
     LDM = np.array(LDM)
     num_cols_LDM = len(LDM)
  
