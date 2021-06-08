@@ -7,6 +7,7 @@ from scipy.stats import entropy
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import seaborn as sns
+import simple_good_turing
 
 #data generation
 '''
@@ -308,6 +309,37 @@ def computeGoodTuring(LDM):
     # convert adjusted counts to an average
     adjustedPD = np.true_divide(sumColsLDM, num_cols_LDM)
     return adjustedPD
+
+def simpleGoodTuring(LDM):
+    #convert ldm to numpy array
+    LDM = np.array(LDM)
+    num_cols_LDM = len(LDM)
+ 
+    # adds up all the "columns" in the LDM
+    sumColsLDM = np.sum(LDM, axis = 0)
+
+    count_dict = {}
+    for i in range(len(sumColsLDM)):
+        if sumColsLDM[i] != 0:
+            count_dict[i] = int(sumColsLDM[i])
+
+    max_ = max(count_dict.values())
+    L = [i for i in range(len(LDM[0]))]
+    
+    SGT = simple_good_turing.SimpleGoodTuring(count_dict, max_)
+    new_prop = SGT.run_sgt(L)
+
+    # sum_=0
+    # for x in new_prop.values():
+    #     sum_ +=x
+    # print("sum ", sum_)
+
+    PD = [[] for i in range(len(sumColsLDM))]
+
+    for i in new_prop:
+        PD[i] = new_prop[i]
+
+    return PD
 
 
 def plotHeatMap(LDM):
