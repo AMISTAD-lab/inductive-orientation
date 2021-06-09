@@ -99,6 +99,33 @@ def getSimplex(clf, X_test, classes, all_labels):
 
 
     return simplex_vector
+    
+"""
+getTarget produces a numpy array with all 0's execept a 1 at the index representing the correct sequence of labeling/
+inputs:
+    X_test: a pandas dataframe representing the features of the test data
+    y_test: an numpy array representing the correct labels of the test data
+    classes: a list represnting the possible classes
+output:
+    target: a numpy array  with all 0's expect a 1 at the correct index
+    location: the index with a 1
+"""
+def getTarget(X_test, y_test, classes=[0,1]):
+    num_holdout_samples = len(X_test)
+    all_labels = list(itertools.product(classes, repeat=num_holdout_samples))
+    y = np.copy(y_test)
+    y = tuple(list(y.astype(int)))
+    target = []
+    location = 0
+    for i in range(len(all_labels)):
+        if all_labels[i] == y:
+            target.append(1)
+            location = i
+            break
+        else:
+            target.append(0)
+    target = np.array(target)
+    return target, location
 
 '''
 getLDM() takes in a classifier (clf), a set of training features (X_train),
