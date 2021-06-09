@@ -8,6 +8,8 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import seaborn as sns
 import simple_good_turing
+from sklearn.metrics import mean_squared_error
+
 
 #data generation
 '''
@@ -351,6 +353,89 @@ def simpleGoodTuring(LDM):
         PD[i] = new_prop[i]
 
     return PD
+
+"""
+checks the variance, angle, difference, and root mean square error between sparse pd, predict_proba pd and simple good turing pd.
+"""
+def trial(N, clf, X_train, X_test, y_train, classes=[0,1], num_datasets=200, proportion_of_dataset=0.3):
+    list_of_LDM = computeNLDM(N, clf, X_train, X_test, y_train, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset)
+    sparse_Pd_l = [computePD(LDM) for LDM in list_of_LDM]
+    predict_proba_Pd_l = computeNPD(N, clf, X_train, X_test, y_train, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=False)
+    SGT_Pd_l = [simpleGoodTuring(LDM) for LDM in list_of_LDM]
+
+    print("example inductive orientation vector -------------------------------------------------------------")
+
+    sparse_Pd = sparse_Pd_l[0]
+    print("example sparse PD:", sparse_Pd)
+    predict_proba_Pd = predict_proba_Pd_l[0]
+    print("example predict_proba PD:", predict_proba_Pd)
+    SGT_Pd = SGT_Pd_l[0]
+    print("example SGT PD:", SGT_Pd)
+
+    print("variance -------------------------------------------------------------")
+
+    sparse_var = computeVariance(sparse_Pd_l)
+    print("sparse PD variance: ", sparse_var)
+    predict_proba_var = computeVariance(predict_proba_Pd_l)
+    print("predict_proba PD variance: ", predict_proba_var)
+    SGT_var = computeVariance(SGT_Pd_l)
+    print("SGT adjusted PD variance: ", SGT_var)
+
+    print("angle -------------------------------------------------------------")
+
+    print("angle sparse, SGT: ", computeAngle(sparse_Pd, SGT_Pd))
+    print("angle sparse, predict_proba: ", computeAngle(sparse_Pd, predict_proba_Pd))
+    print("angle predict_proba, SGT: ", computeAngle(predict_proba_Pd, SGT_Pd))
+    
+    print("difference -------------------------------------------------------------")
+
+    print("difference sparse, SGT: ", (sparse_Pd - SGT_Pd))
+    print("difference sparse, predict_proba: ", (sparse_Pd - predict_proba_Pd))
+    print("difference predict_proba, SGT: ", (predict_proba_Pd - SGT_Pd))
+
+    print("root mean square error -------------------------------------------------------------")
+    
+    print("root mean square error sparse, SGT: ", mean_squared_error(sparse_Pd, SGT_Pd, squared=False))
+    print("root mean square error sparse, predict_proba: ", mean_squared_error(sparse_Pd, predict_proba_Pd, squared=False))
+    print("root mean square error predict_proba, SGT: ", mean_squared_error(predict_proba_Pd, SGT_Pd, squared=False))
+
+"""
+only checks the angle, difference, and root mean square error between sparse pd, predict_proba pd and simple good turing pd.
+the sparse LDM used to calculate sparse pd and SGT pd are different, so this result might be more acurrate.
+"""
+def quick_trial(clf, X_train, X_test, y_train, classes=[0,1], num_datasets=200, proportion_of_dataset=0.3):
+    sparse_LDM1 = getLDM(clf, X_train, X_test, y_train, classes=classes, num_datasets = num_datasets, proportion_of_dataset=proportion_of_dataset)
+    sparse_Pd = computePD(sparse_LDM1)
+    print("sparse PD: ", sparse_Pd)
+
+    predict_proba_LDM = getLDM(clf, X_train, X_test, y_train, classes=classes, num_datasets = 100, proportion_of_dataset=proportion_of_dataset, sparse=False)
+    predict_proba_Pd = computePD(predict_proba_LDM)
+    print("predict_proba PD: ", predict_proba_Pd)
+    
+    sparse_LDM2 = getLDM(clf, X_train, X_test, y_train, classes=classes, num_datasets = num_datasets, proportion_of_dataset=proportion_of_dataset)
+    SGT_Pd = simpleGoodTuring(sparse_LDM2)
+    print("SGT adjusted PD: ", SGT_Pd)
+
+    print("angle -------------------------------------------------------------")
+
+    print("angle sparse, SGT: ", computeAngle(sparse_Pd, SGT_Pd))
+    print("angle sparse, predict_proba: ", computeAngle(sparse_Pd, predict_proba_Pd))
+    print("angle predict_proba, SGT: ", computeAngle(predict_proba_Pd, SGT_Pd))
+    
+    print("difference -------------------------------------------------------------")
+
+    print("difference sparse, SGT: ", (sparse_Pd - SGT_Pd))
+    print("difference sparse, predict_proba: ", (sparse_Pd - predict_proba_Pd))
+    print("difference predict_proba, SGT: ", (predict_proba_Pd - SGT_Pd))
+
+    print("root mean square error -------------------------------------------------------------")
+
+    print("root mean square error sparse, SGT: ", mean_squared_error(sparse_Pd, SGT_Pd, squared=False))
+    print("root mean square error sparse, predict_proba: ", mean_squared_error(sparse_Pd, predict_proba_Pd, squared=False))
+    print("root mean square error predict_proba, SGT: ", mean_squared_error(predict_proba_Pd, SGT_Pd, squared=False))
+
+
+
 
 
 def plotHeatMap(LDM):
