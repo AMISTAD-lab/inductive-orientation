@@ -45,14 +45,14 @@ def get_PD(list_of_clf, sgt=True, use_predict_proba=False):
     
     return list_PD
 
-def get_cluster_labels(X):
-    clustering = DBSCAN().fit(X)
+def get_cluster_labels(clustering_method, X):
+    clustering = clustering_method().fit(X)
     return clustering.labels_
 
 # Noisy samples are given the label -1.
-def cluster(list_of_clf, sgt=True, use_predict_proba=False):
-    return get_cluster_labels(get_PD(list_of_clf, sgt=sgt, use_predict_proba=use_predict_proba))
+def cluster(clustering_method, list_of_clf, sgt=True, use_predict_proba=False):
+    return get_cluster_labels(clustering_method, get_PD(list_of_clf, sgt=sgt, use_predict_proba=use_predict_proba))
 
 
-list_of_clf=[model]*10 + [model3]*10 + [model10]*10 + [adaboostClassifier]*10
-print(cluster(list_of_clf))
+list_of_clf=[model]*10 + [model3]*10 
+print(cluster(DBSCAN, list_of_clf))
