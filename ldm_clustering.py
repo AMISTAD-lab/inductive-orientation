@@ -1,4 +1,4 @@
-from sklearn.cluster import DBSCAN
+from sklearn.cluster import DBSCAN, KMeans
 import new_ldm_inductive as ldm_inductive
 
 from sklearn import datasets
@@ -8,8 +8,10 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
 import new_ldm_inductive as ldm_inductive
 import pandas as pd
+import matplotlib.pyplot as plt
 
 dataset = pd.read_csv("EEG_Eye_State.csv", header = None)
 values = dataset.values
@@ -50,9 +52,26 @@ def get_cluster_labels(clustering_method, X):
     return clustering.labels_
 
 # Noisy samples are given the label -1.
-def cluster(clustering_method, list_of_clf, sgt=True, use_predict_proba=False):
-    return get_cluster_labels(clustering_method, get_PD(list_of_clf, sgt=sgt, use_predict_proba=use_predict_proba))
+def cluster(clustering_method, list_of_clf, sgt=True, use_predict_proba=False, **kwargs):
+    list_of_PD = get_PD(list_of_clf, sgt=sgt, use_predict_proba=use_predict_proba)
+    clustering = clustering_method(**kwargs).fit(list_of_PD)
+    labels = clustering.labels_
+    #labels = get_cluster_labels(clustering_method, list_of_PD)
+    return labels, list_of_PD
+    # return get_cluster_labels(clustering_method, get_PD(list_of_clf, sgt=sgt, use_predict_proba=use_predict_proba))
 
+def cluster_plot(X, labels):
+    print(labels)
+    pca=PCA(2)
+    X = pca.fit_transform(X)
+    print(X.shape)
+    plt.scatter(X[:,0], X[:,1], c=labels, s=50, cmap='viridis')
+    plt.show()
 
-list_of_clf=[model]*10 + [model3]*10 
-print(cluster(DBSCAN, list_of_clf))
+if __name__ == "__main__":
+    list_of_clf=[model]*10 + [model3]*10 
+    #kmeans = KMeans(2, random_state=0)
+    labels, list_of_PD = cluster(KMeans, list_of_clf, n_clusters=2, random_state=0)
+    #labels, list_of_PD = cluster(DBSCAN, list_of_clf)
+    cluster_plot(list_of_PD, labels)
+    # print(cluster(DBSCAN, list_of_clf))
