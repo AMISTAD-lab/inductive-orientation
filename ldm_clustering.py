@@ -1,4 +1,4 @@
-from sklearn.cluster import DBSCAN, KMeans
+from sklearn.cluster import DBSCAN, KMeans, MeanShift
 import new_ldm_inductive as ldm_inductive
 
 from sklearn import datasets
@@ -51,7 +51,7 @@ def get_cluster_labels(clustering_method, X):
     clustering = clustering_method().fit(X)
     return clustering.labels_
 
-# Noisy samples are given the label -1.
+# DBSCAN gives noisy samples the label -1.
 def cluster(clustering_method, list_of_clf, sgt=True, use_predict_proba=False, **kwargs):
     list_of_PD = get_PD(list_of_clf, sgt=sgt, use_predict_proba=use_predict_proba)
     clustering = clustering_method(**kwargs).fit(list_of_PD)
@@ -60,18 +60,25 @@ def cluster(clustering_method, list_of_clf, sgt=True, use_predict_proba=False, *
     return labels, list_of_PD
     # return get_cluster_labels(clustering_method, get_PD(list_of_clf, sgt=sgt, use_predict_proba=use_predict_proba))
 
-def cluster_plot(X, labels):
+def cluster_plot(X, labels, clf_names):
     print(labels)
     pca=PCA(2)
     X = pca.fit_transform(X)
     print(X.shape)
-    plt.scatter(X[:,0], X[:,1], c=labels, s=50, cmap='viridis')
+    
+    z = X[:,0]
+    y = X[:,1]
+
+    plt.scatter(z, y, c=labels, s=50, cmap='viridis')
+    for i, txt in enumerate(clf_names):
+        plt.annotate(txt, (z[i], y[i]))
     plt.show()
 
 if __name__ == "__main__":
     list_of_clf=[model]*10 + [model3]*10 
+    clf_names = ["KNN1"]*10 + ["KNN3"]*10
     #kmeans = KMeans(2, random_state=0)
     labels, list_of_PD = cluster(KMeans, list_of_clf, n_clusters=2, random_state=0)
     #labels, list_of_PD = cluster(DBSCAN, list_of_clf)
-    cluster_plot(list_of_PD, labels)
+    cluster_plot(list_of_PD, labels, clf_names)
     # print(cluster(DBSCAN, list_of_clf))
