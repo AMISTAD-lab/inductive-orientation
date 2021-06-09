@@ -12,9 +12,9 @@ from statistics import mean
 
 # Initialize model specific variables
 #dataset = datasets.load_iris()
-dataset = pd.read_csv("BankNote_Authentication.csv")
-X = dataset[dataset.columns[0:4]]
-y = dataset[dataset.columns[4]]
+dataset = pd.read_csv("EEG_Eye_State.csv", header = None)
+values = dataset.values
+X, y = values[:, :-1], values[:, -1]
 model = KNeighborsClassifier(n_neighbors=1)
 model3 = KNeighborsClassifier(n_neighbors=3)
 model10 = KNeighborsClassifier(n_neighbors=10)
@@ -28,7 +28,7 @@ randomForest = RandomForestClassifier()
 # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.003) #gives us about 5 things in the holdout set
 #X_train, X_test, y_train, y_test = train_test_split(dataset.data, dataset.target, test_size = holdout_set_percentage)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.003, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=5, random_state=42)
 classes=[0,1]
 num_datasets=200
 proportion_of_dataset=0.3
