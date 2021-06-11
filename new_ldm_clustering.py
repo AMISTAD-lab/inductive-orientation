@@ -63,7 +63,7 @@ Parameters:
     1. param_dimReduc = a dictionary containing key-value pairs for dimensionality reduction 
     2. param_clustering = a dictionary containing key-value pairs for clustering algorithm
 '''
-def cluster(clustering_method, dimReduc_method, list_of_clf, param_clustering = {}, param_dimReduc = {},
+def cluster(clustering_method, list_of_clf, param_clustering = {}, dimReduc_method=None, param_dimReduc = {},
             sgt=True, use_predict_proba=False):
     
     print("param_dimReduc", param_dimReduc)
@@ -71,14 +71,15 @@ def cluster(clustering_method, dimReduc_method, list_of_clf, param_clustering = 
  
     list_of_PD = get_PD(list_of_clf, sgt=sgt, use_predict_proba=use_predict_proba)
     
-    #reduce the dimensions of PD vector
-    array_of_PD_reduced = dimReduc_method(**param_dimReduc).fit_transform(np.array(list_of_PD))
+    if dimReduc_method != None:
+        #reduce the dimensions of PD vector
+        list_of_PD = dimReduc_method(**param_dimReduc).fit_transform(np.array(list_of_PD))
     
     #cluster lower dimensional PD vectors 
-    clustering = clustering_method(**param_clustering).fit(array_of_PD_reduced)
+    clustering = clustering_method(**param_clustering).fit(list_of_PD)
     labels = clustering.labels_
     
-    return labels, array_of_PD_reduced
+    return labels, list_of_PD
  
 '''
 cluster_plot
@@ -207,7 +208,7 @@ if __name__ == "__main__":
     # clf_names = ["KNN1"]*3 + ["KNN3"]*3 + ["KNN10"]*3
     # param_clustering={"n_clusters":3, "random_state": 0}
     # param_dimReduc={"n_components": 4}
-    # labels, list_of_PD = cluster(KMeans, PCA, list_of_clf, param_clustering, param_dimReduc)
+    # labels, list_of_PD = cluster(KMeans, list_of_clf, param_clustering, PCA, param_dimReduc)
     # print("Was dimensionality reduced:", len(list_of_PD[0]))
     # visualDim=3
     # reduceDim=True
@@ -219,9 +220,21 @@ if __name__ == "__main__":
     # clf_names = ["KNN1"]*3 + ["KNN3"]*3 + ["KNN10"]*3
     # param_clustering={"n_clusters":3, "random_state": 0}
     # param_dimReduc={"n_components": 4}
-    # labels, list_of_PD = cluster(KMeans, PCA, list_of_clf, param_clustering, param_dimReduc)
+    # labels, list_of_PD = cluster(KMeans, list_of_clf, param_clustering,PCA, param_dimReduc)
     # print("Was dimensionality reduced:", len(list_of_PD[0]))
     # visualDim=2
+    # reduceDim=True
+    # labels=labels
+    # cluster_plot(list_of_PD, clf_names, labels, visualDim, reduceDim, PCA, n_components = visualDim)
+
+    # #clustering in original dimension + visualization in 3d
+    # list_of_clf=[model]*3 + [model3]*3 + [model10]*3
+    # clf_names = ["KNN1"]*3 + ["KNN3"]*3 + ["KNN10"]*3
+    # param_clustering={"n_clusters":3, "random_state": 0}
+    # param_dimReduc={"n_components": 4}
+    # labels, list_of_PD = cluster(KMeans, list_of_clf, param_clustering)
+    # print("clustering occured at dimension ", len(list_of_PD[0]))
+    # visualDim=3
     # reduceDim=True
     # labels=labels
     # cluster_plot(list_of_PD, clf_names, labels, visualDim, reduceDim, PCA, n_components = visualDim)
