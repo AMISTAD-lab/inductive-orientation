@@ -51,6 +51,11 @@ def split_dataset(X_train, y_train, num_entries, i=0):
     subset_y = y_train[start_index:start_index+num_entries]
     return subset_X, subset_y
 
+def fixed_dataset(X_train, y_train, num_entries, i=0):
+    subset_X = X_train[:num_entries]
+    subset_y = y_train[:num_entries]
+    return subset_X, subset_y
+    
 #Getting the LDM, and PD
 '''
 getSimplex()) takes in a classifier (clf), a set of test features (X_test), and a list of possible classes
@@ -150,7 +155,7 @@ inputs:
 outpus:
     LDM: a 2D np array matrix, where LDM[i] gives a probability distribution vector trained on one particular subset of training data and tested on a fixed holdout set.
 '''
-def getLDM(clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.1, sparse=True, data_generation=random_uniform):
+def getLDM(clf, X_train, X_test, y_train, num_repeat=1, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.1, sparse=True, data_generation=random_uniform):
     # Initialize a labelling distribution matrix to be constructed
     LDM = []
     num_holdout_samples = len(X_test)
@@ -165,18 +170,28 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, propo
         clf.classes_ = classes
         # Train the model using the current training set
 
-        if data_generation == random_uniform:
+        if data_generation == random_uniform or data_generation == fixed_dataset:
             num_entries = int(proportion_of_dataset * len(X_train))
 
-        elif data_generation == split_dataset:
+        elif data_generation == split_dataset or data_generation:
             num_entries = len(X_train)//num_datasets
 
         subset_X, subset_y = data_generation(X_train, y_train, num_entries, i=i) 
 
-        clf.fit(subset_X, subset_y)
+        averaged_simplex_vector = np.zeros(len(all_labels))
+        for i in range(num_repeat):
+            #print(i)
+            clf.fit(subset_X, subset_y)
+            current_simplex_vector = getSimplex(clf, X_test, classes, all_labels)
+            averaged_simplex_vector += current_simplex_vector
+            #print(averaged_simplex_vector)
+        averaged_simplex_vector /= num_repeat
+        #LDM.append(current_simplex_vector)
+        #clf.fit(subset_X, subset_y)
         # Obtain simplex vector for current training set
-        current_simplex_vector = getSimplex(clf, X_test, classes, all_labels)
-        LDM.append(current_simplex_vector)
+        #current_simplex_vector = getSimplex(clf, X_test, classes, all_labels)
+        
+        LDM.append(averaged_simplex_vector)
 
     if sparse == True:
         for x in LDM:
@@ -187,10 +202,10 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, propo
 
     return LDM
 
-def computeNLDM(num_LDM, clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
+def computeNLDM(num_LDM, clf, X_train, X_test, y_train, num_repeat=1, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
     list_of_LDM=[]
     for i in range(num_LDM):
-        LDM = getLDM(clf, X_train, X_test, y_train, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
+        LDM = getLDM(clf, X_train, X_test, y_train, num_repeat=num_repeat, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
         list_of_LDM.append(LDM)
     return list_of_LDM
 
@@ -212,11 +227,11 @@ inputs:
 output:
     list_of_PD: a list of num_PD number of inductive orientation vectors (each of which is a np array)
 '''
-def computeNPD(num_PD, clf, X_train, X_test, y_train, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
+def computeNPD(num_PD, clf, X_train, X_test, y_train,  num_repeat=1, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
     list_of_PD = []
 
     for i in range(num_PD):
-        LDM = getLDM(clf, X_train, X_test, y_train, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
+        LDM = getLDM(clf, X_train, X_test, y_train,  num_repeat=num_repeat, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
         list_of_PD.append(computePD(LDM))
 
     return list_of_PD
@@ -279,13 +294,13 @@ returns:
     run_number: a list that records the size of the inductive orientation vectors PD's
     variance_per_run: a list that gives the variance corresponding to the run_number
 '''
-def variance_propdata(percentages, clf, X_train, X_test, y_train,classes=[0,1,2], num_datasets=5, sparse=True, data_generation=random_uniform):
+def variance_propdata(percentages, clf, X_train, X_test, y_train, num_repeat=1, classes=[0,1,2], num_datasets=5, sparse=True, data_generation=random_uniform):
     percentages_list = []
     variance_list = []
     for i in percentages:
         proportion_of_dataset = i
         percentages_list.append(i)
-        current_ldm = getLDM(clf, X_train, X_test, y_train, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
+        current_ldm = getLDM(clf, X_train, X_test, y_train, num_repeat=num_repeat,classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
         current_variance = computeVariance(current_ldm)
         variance_list.append(current_variance)
         print("proportion of dataset: ", i, " the variance of the Pf's in the LDM with: ", num_datasets, "number of datasets is: ", current_variance)
@@ -386,10 +401,10 @@ def simpleGoodTuring(LDM):
 """
 checks the variance, angle, difference, and root mean square error between sparse pd, predict_proba pd and simple good turing pd.
 """
-def trial(N, clf, X_train, X_test, y_train, classes=[0,1], num_datasets=200, proportion_of_dataset=0.3):
-    list_of_LDM = computeNLDM(N, clf, X_train, X_test, y_train, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset)
+def trial(N, clf, X_train, X_test, y_train, num_repeat=1, classes=[0,1], num_datasets=200, proportion_of_dataset=0.3):
+    list_of_LDM = computeNLDM(N, clf, X_train, X_test, y_train, num_repeat=num_repeat, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset)
     sparse_Pd_l = [computePD(LDM) for LDM in list_of_LDM]
-    predict_proba_Pd_l = computeNPD(N, clf, X_train, X_test, y_train, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=False)
+    predict_proba_Pd_l = computeNPD(N, clf, X_train, X_test, y_train, num_repeat=num_repeat, classes=classes, num_datasets=num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=False)
     SGT_Pd_l = [simpleGoodTuring(LDM) for LDM in list_of_LDM]
 
     print("example inductive orientation vector -------------------------------------------------------------")
@@ -445,18 +460,18 @@ def trial(N, clf, X_train, X_test, y_train, classes=[0,1], num_datasets=200, pro
 only checks the angle, difference, and root mean square error between sparse pd, predict_proba pd and simple good turing pd.
 the sparse LDM used to calculate sparse pd and SGT pd are different, so this result might be more acurrate.
 """
-def quick_trial(clf, X_train, X_test, y_train, classes=[0,1], num_datasets=200, proportion_of_dataset=0.3):
-    sparse_LDM1 = getLDM(clf, X_train, X_test, y_train, classes=classes, num_datasets = num_datasets, proportion_of_dataset=proportion_of_dataset)
+def quick_trial(clf, X_train, X_test, y_train, num_repeat=1, classes=[0,1], num_datasets=200, proportion_of_dataset=0.3):
+    sparse_LDM1 = getLDM(clf, X_train, X_test, y_train, num_repeat=num_repeat, classes=classes, num_datasets = num_datasets, proportion_of_dataset=proportion_of_dataset)
     sparse_Pd = computePD(sparse_LDM1)
     print("sparse PD: ", sparse_Pd)
     print()
 
-    predict_proba_LDM = getLDM(clf, X_train, X_test, y_train, classes=classes, num_datasets = 100, proportion_of_dataset=proportion_of_dataset, sparse=False)
+    predict_proba_LDM = getLDM(clf, X_train, X_test, y_train, num_repeat=num_repeat, classes=classes, num_datasets = num_datasets, proportion_of_dataset=proportion_of_dataset, sparse=False)
     predict_proba_Pd = computePD(predict_proba_LDM)
     print("predict_proba PD: ", predict_proba_Pd)
     print()
 
-    sparse_LDM2 = getLDM(clf, X_train, X_test, y_train, classes=classes, num_datasets = num_datasets, proportion_of_dataset=proportion_of_dataset)
+    sparse_LDM2 = getLDM(clf, X_train, X_test, y_train,  num_repeat=num_repeat, classes=classes, num_datasets = num_datasets, proportion_of_dataset=proportion_of_dataset)
     SGT_Pd = simpleGoodTuring(sparse_LDM2)
     print("SGT adjusted PD: ", SGT_Pd)
     print()
@@ -481,8 +496,6 @@ def quick_trial(clf, X_train, X_test, y_train, classes=[0,1], num_datasets=200, 
     print("root mean square error sparse, SGT: ", mean_squared_error(sparse_Pd, SGT_Pd, squared=False))
     print("root mean square error sparse, predict_proba: ", mean_squared_error(sparse_Pd, predict_proba_Pd, squared=False))
     print("root mean square error predict_proba, SGT: ", mean_squared_error(predict_proba_Pd, SGT_Pd, squared=False))
-
-
 
 
 
