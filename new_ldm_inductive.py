@@ -71,66 +71,77 @@ outputs:
     simplex vector: a numpy array. each entry in the array includes the probability the classification 
     algorithm will give the corresponding sequence of labels as its prediction
 '''
-def getSimplex(clf, X_test, classes, all_labels):
-    y_pred_prob = clf.predict_proba(X_test)
-    # Generate a list of predicted labels to compute the differences
-    # in label assignment relative to the label assignment of the training dataset
-    # predicted_labels_list = clf.predict(X_test)
-    #print("num_holdout_samples: ", num_holdout_samples)
+def getSimplex(clf, X_test, classes, all_labels, sparse=True):
+    if sparse:
+        predicted_labels = clf.predict(X_test)
+        predicted_labels = [int(x) for x in predicted_labels]
+        for i in range(0, len(all_labels)):
+            if tuple(predicted_labels) == all_labels[i]:
+                return i
+    else:
+        simplex_vector = []
+        alpha = 0.000001 # Used for alpha smoothing
+        sum_probs = 0    # Used for normailization later
+        y_pred_prob = clf.predict_proba(X_test)
+        # Iterate through all_labels and calculate probabilities
+        # based on y_pred_prob values
+        for i in range(0, len(all_labels)):
+            #current_prob = alpha
+            current_prob = 1.0
 
-    #computationally impossible for large numbers
-    simplex_vector = []
+            for j in range(0, len(all_labels[i])):
+                for class_index in classes:
+                    if (all_labels[i][j] == class_index): #and (class_index < len(y_pred_prob[j]))):
+                            current_prob *= (alpha if y_pred_prob[j][class_index] == 0 else y_pred_prob[j][class_index])
+                            #current_prob = 0.000001 * 0.000001 if y_pred_prob[holdoutsamplei][class_index]
+            sum_probs += current_prob
+            simplex_vector.append(current_prob)
+            simplex_vector = np.array(simplex_vector)
+            return simplex_vector
 
-    alpha = 0.000001 # Used for alpha smoothing
-    sum_probs = 0    # Used for normailization later
-
-    # Iterate through all_labels and calculate probabilities
-    # based on y_pred_prob values
-    for i in range(0, len(all_labels)):
-        #current_prob = alpha
-        current_prob = 1.0
-
-        for j in range(0, len(all_labels[i])):
-            for class_index in classes:
-                if ((all_labels[i][j] == class_index) and (class_index < len(y_pred_prob[j]))):
-                        current_prob *= (alpha if y_pred_prob[j][class_index] == 0 else y_pred_prob[j][class_index])
-                        #current_prob = 0.000001 * 0.000001 if y_pred_prob[holdoutsamplei][class_index]
-        sum_probs += current_prob
-        simplex_vector.append(current_prob)
-
-    # No need to Normalize?
-    #simplex_vector = np.array(simplex_vector) / sum_probs
-    simplex_vector = np.array(simplex_vector)
-
-
-    return simplex_vector
-    
+# def getSparseSimplex(clf, X_test, all_labels):
+#     predicted_labels = clf.predict(X_test)
+#     predicted_labels = [int(x) for x in predicted_labels]
+#     for i in range(0, len(all_labels)):
+#         if tuple(predicted_labels) == all_labels[i]:
+#             return i
 """
 getTarget produces a numpy array with all 0's execept a 1 at the index representing the correct sequence of labeling/
 inputs:
     X_test: a pandas dataframe representing the features of the test data
     y_test: an numpy array representing the correct labels of the test data
     classes: a list represnting the possible classes
+    min_num_accurate: number of elements in the holdout set = X_test that should be identified correctly to be considered as a target
 output:
     target: a numpy array  with all 0's expect a 1 at the correct index
-    location: the index with a 1
 """
-def getTarget(X_test, y_test, classes=[0,1]):
+def getTarget(X_test, y_test, min_num_accurate, classes=[0,1]):
     num_holdout_samples = len(X_test)
-    all_labels = list(itertools.product(classes, repeat=num_holdout_samples))
-    y = np.copy(y_test)
-    y = tuple(list(y.astype(int)))
-    target = []
-    location = 0
-    for i in range(len(all_labels)):
-        if all_labels[i] == y:
-            target.append(1)
-            location = i
-            break
-        else:
-            target.append(0)
-    target = np.array(target)
-    return target, location
+    all_labels = np.array(list(itertools.product(classes, repeat=num_holdout_samples)))
+    testForCorrectLabels = all_labels == y_test
+    countNumCorrect = np.sum(testForCorrectLabels, axis = 1)
+    target = 1 * (countNumCorrect >= min_num_accurate)
+    return target
+
+'''
+computeAlgorithmicBias takes in a target vector and a pD_vector (both numpy arrays)
+Parameters:
+1. target = k-hot vector (acceptable labelings/classification)
+2. pD_vector
+
+output:
+  algorithmic Bias
+'''
+def computeAlgorithmicBias(target, pD_vector):
+  if len(target) != len(pD_vector):
+    raise Exception("Length of target vector and pD_vector does not match")
+  #k = number of acceptable labelings/classification
+  k = np.sum(target)
+
+  #len(target) = size of search space
+  # k / len(target) = probability of success when uniformly randomly sampling
+  algorithmicBias = np.sum(target * pD_vector) - (k / len(target))
+  return algorithmicBias
 
 '''
 getLDM() takes in a classifier (clf), a set of training features (X_train),
@@ -155,52 +166,78 @@ inputs:
 outpus:
     LDM: a 2D np array matrix, where LDM[i] gives a probability distribution vector trained on one particular subset of training data and tested on a fixed holdout set.
 '''
-def getLDM(clf, X_train, X_test, y_train, num_repeat=1, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.1, sparse=True, data_generation=random_uniform):
+def getLDM(clf, X_train, X_test, y_train, classes=[0,1], num_datasets=5, num_repeat=1, proportion_of_dataset=0.1, sparse=True, data_generation=random_uniform):
     # Initialize a labelling distribution matrix to be constructed
-    LDM = []
     num_holdout_samples = len(X_test)
     all_labels = list(itertools.product(classes, repeat=num_holdout_samples))
-    #print("this is all_labels ",all_labels)
-    # Iterate through all training sets (there is a total of num_columns training
-    # sets)
-    for i in range(num_datasets):
-        # Shuffle the training labels randomly to generate different training
-        # sets for each iteration
-        # random.shuffle(y_train)
-        clf.classes_ = classes
-        # Train the model using the current training set
+    if sparse:
+        LDM = [len(classes)**num_datasets]
+        num_holdout_samples = len(X_test)
+        i = 0
+        while i < num_datasets:
+            if data_generation == random_uniform or data_generation == fixed_dataset:
+                num_entries = int(proportion_of_dataset * len(X_train))
 
-        if data_generation == random_uniform or data_generation == fixed_dataset:
-            num_entries = int(proportion_of_dataset * len(X_train))
+            elif data_generation == split_dataset or data_generation:
+                num_entries = len(X_train)//num_datasets
 
-        elif data_generation == split_dataset or data_generation:
-            num_entries = len(X_train)//num_datasets
+            subset_X, subset_y = data_generation(X_train, y_train, num_entries, i=i)
+            Pf = []
+            for repeat in range(num_repeat):
+                clf.fit(subset_X, subset_y)
+                outcome = getSimplex(clf, X_test, classes, all_labels, sparse) #all_labels doesnt matter for the sparse case
+                Pf.append(outcome)
+            LDM.append(Pf)
+            i += 1
 
-        subset_X, subset_y = data_generation(X_train, y_train, num_entries, i=i) 
+    else:
+        LDM = []
+        for i in range(num_datasets):
+            # Shuffle the training labels randomly to generate different training
+            # sets for each iteration
+            clf.classes_ = classes
+            # Train the model using the current training set
+            if data_generation == random_uniform or data_generation == fixed_dataset:
+                num_entries = int(proportion_of_dataset * len(X_train))
 
-        averaged_simplex_vector = np.zeros(len(all_labels))
-        for i in range(num_repeat):
-            #print(i)
-            clf.fit(subset_X, subset_y)
-            current_simplex_vector = getSimplex(clf, X_test, classes, all_labels)
-            averaged_simplex_vector += current_simplex_vector
-            #print(averaged_simplex_vector)
-        averaged_simplex_vector /= num_repeat
-        #LDM.append(current_simplex_vector)
-        #clf.fit(subset_X, subset_y)
-        # Obtain simplex vector for current training set
-        #current_simplex_vector = getSimplex(clf, X_test, classes, all_labels)
-        
-        LDM.append(averaged_simplex_vector)
+            elif data_generation == split_dataset or data_generation:
+                num_entries = len(X_train)//num_datasets
 
-    if sparse == True:
-        for x in LDM:
-            index = np.argmax(x)
-            for i in range(len(x)):
-                x[i] = 0
-            x[index] = 1
+            subset_X, subset_y = data_generation(X_train, y_train, num_entries, i=i) 
+
+            averaged_simplex_vector = np.zeros(len(all_labels))
+            for i in range(num_repeat):
+                clf.fit(subset_X, subset_y)
+                current_simplex_vector = getSimplex(clf, X_test, classes, all_labels,sparse)
+                averaged_simplex_vector += current_simplex_vector
+            averaged_simplex_vector /= num_repeat
+            # Obtain simplex vector for current training set
+            LDM.append(averaged_simplex_vector)
 
     return LDM
+
+# def getSparseLDM(clf, X_train, X_test, y_train, classes=[0,1], num_datasets=5, num_repeat=1, proportion_of_dataset=0.1, sparse=True, data_generation=random_uniform):
+#     LDM = [len(classes)**num_datasets]
+#     num_holdout_samples = len(X_test)
+#     all_labels = list(itertools.product(classes, repeat=num_holdout_samples))
+#     i = 0
+#     while i < num_datasets:
+#         if data_generation == random_uniform or data_generation == fixed_dataset:
+#             num_entries = int(proportion_of_dataset * len(X_train))
+
+#         elif data_generation == split_dataset or data_generation:
+#             num_entries = len(X_train)//num_datasets
+
+#         subset_X, subset_y = data_generation(X_train, y_train, num_entries, i=i)
+#         Pf = []
+#         for repeat in range(num_repeat):
+#             clf.fit(subset_X, subset_y)
+#             outcome = getSparseSimplex(clf, X_test, all_labels)
+#             Pf.append(outcome)
+#         LDM.append(Pf)
+#         i += 1
+#     return LDM
+            
 
 def computeNLDM(num_LDM, clf, X_train, X_test, y_train, num_repeat=1, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
     list_of_LDM=[]
@@ -216,9 +253,28 @@ input:
 return:
     PD: a np array that is an inductive orientation vector    
 '''
-def computePD(LDM):
-    PD = np.mean(LDM, axis=0)
+def computePD(LDM, sparse=True):
+    if sparse:
+        PD_length = LDM[0]
+        LDM = LDM[1:]
+        values, counts = np.unique(LDM, return_counts=True)
+        counts = counts / np.sum(counts)
+        PD = np.zeros(PD_length)
+        for i, index in enumerate(values):
+            PD[index] = counts[i]
+    else:
+        PD = np.mean(LDM, axis=0)
     return PD
+
+# def computeSparsePD(LDM):
+#     PD_length = LDM[0]
+#     LDM = LDM[1:]
+#     values, counts = np.unique(LDM, return_counts=True)
+#     counts = counts / np.sum(counts)
+#     PD = np.zeros(PD_length)
+#     for i, index in enumerate(values):
+#         PD[index] = counts[i]
+#     return PD
 
 '''
 computeNPD creates a list of N number of inductive orientation vectors
@@ -227,7 +283,7 @@ inputs:
 output:
     list_of_PD: a list of num_PD number of inductive orientation vectors (each of which is a np array)
 '''
-def computeNPD(num_PD, clf, X_train, X_test, y_train,  num_repeat=1, classes=[0,1,2], num_datasets=5, proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
+def computeNPD(num_PD, clf, X_train, X_test, y_train,  num_repeat=1, classes=[0,1], num_datasets=5, proportion_of_dataset=0.3, sparse=True, data_generation=random_uniform):
     list_of_PD = []
 
     for i in range(num_PD):
@@ -306,6 +362,28 @@ def variance_propdata(percentages, clf, X_train, X_test, y_train, num_repeat=1, 
         print("proportion of dataset: ", i, " the variance of the Pf's in the LDM with: ", num_datasets, "number of datasets is: ", current_variance)
     return percentages_list, variance_list
 
+'''
+Algorithmic Capacity = Entropy of PD vector - Expected value of (Entropy of each individual PF vector)
+Parameters: 
+    1. ldm = list of Pf vectors
+    2. pD_vector = PD vector calculated from ldm
+'''
+def calculateAlgorithmicCapacity(ldm, pD_vector):
+
+    #entropy_of_Pfs = list containing the entropy of each individual Pf vector in ldm
+    entropy_of_Pfs = np.array(computeEntropy(ldm))
+    #print("Entropy of Pfs: ",  entropy_of_Pfs)
+    #print("Entropy Calculated: ", [entropy(l) for l in ldm])
+
+    #expected value/average of the entropies of each Pf vector
+    expected_entropy_of_Pfs = np.mean(entropy_of_Pfs)
+    #print("Expected = mean of entropy: ", expected_entropy_of_Pfs)
+
+    #calculate the entropy of a pD_vector
+    entropy_pD = entropy(pD_vector)
+    #print("Entropy of PD: ", entropy_PD)
+
+    return (entropy_pD - expected_entropy_of_Pfs)
 
 '''
 computeAngle finds the radian angle between two inductive orientation vector using dot product
