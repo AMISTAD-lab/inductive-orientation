@@ -72,12 +72,14 @@ outputs:
     algorithm will give the corresponding sequence of labels as its prediction
 '''
 def getSimplex(clf, X_test, classes, all_labels, sparse=True):
+    #the sparse case
     if sparse:
-        predicted_labels = clf.predict(X_test)
+        predicted_labels = clf.predict(X_test) # a list of predictions, one for each thing in X_test
         predicted_labels = [int(x) for x in predicted_labels]
-        for i in range(0, len(all_labels)):
+        for i in range(0, len(all_labels)): #returns the index of all_labels that matches the predicted_labels
             if tuple(predicted_labels) == all_labels[i]:
                 return i
+    #predict proba case
     else:
         simplex_vector = []
         alpha = 0.000001 # Used for alpha smoothing
@@ -116,6 +118,7 @@ output:
     target: a numpy array  with all 0's expect a 1 at the correct index
 """
 def getTarget(X_test, y_test, min_num_accurate, classes=[0,1]):
+    y_test = y_test.astype("int")
     num_holdout_samples = len(X_test)
     all_labels = np.array(list(itertools.product(classes, repeat=num_holdout_samples)))
     testForCorrectLabels = all_labels == y_test
@@ -170,9 +173,9 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1], num_datasets=5, num_rep
     # Initialize a labelling distribution matrix to be constructed
     num_holdout_samples = len(X_test)
     all_labels = list(itertools.product(classes, repeat=num_holdout_samples))
+    #sparse case
     if sparse:
-        LDM = [len(classes)**num_datasets]
-        num_holdout_samples = len(X_test)
+        LDM = [len(classes)**num_holdout_samples] #the first thing in LDM is the number of entries in the PD vector
         i = 0
         while i < num_datasets:
             if data_generation == random_uniform or data_generation == fixed_dataset:
@@ -182,14 +185,14 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1], num_datasets=5, num_rep
                 num_entries = len(X_train)//num_datasets
 
             subset_X, subset_y = data_generation(X_train, y_train, num_entries, i=i)
-            Pf = []
+            Pf = [] # shares the same training data, has length equal to num_repeat, average becomes P bar F/ one column of the LDM
             for repeat in range(num_repeat):
                 clf.fit(subset_X, subset_y)
-                outcome = getSimplex(clf, X_test, classes, all_labels, sparse) #all_labels doesnt matter for the sparse case
+                outcome = getSimplex(clf, X_test, classes, all_labels, sparse) #outcome is just an index
                 Pf.append(outcome)
             LDM.append(Pf)
             i += 1
-
+    #predict_proba case
     else:
         LDM = []
         for i in range(num_datasets):
@@ -254,14 +257,16 @@ return:
     PD: a np array that is an inductive orientation vector    
 '''
 def computePD(LDM, sparse=True):
+    #sprase case
     if sparse:
         PD_length = LDM[0]
         LDM = LDM[1:]
         values, counts = np.unique(LDM, return_counts=True)
-        counts = counts / np.sum(counts)
+        counts = counts / np.sum(counts) # to get the propobability distribution at each non-zero index
         PD = np.zeros(PD_length)
         for i, index in enumerate(values):
             PD[index] = counts[i]
+    #predict_proba case
     else:
         PD = np.mean(LDM, axis=0)
     return PD
@@ -442,25 +447,18 @@ def computeGoodTuring(LDM):
     return adjustedPD
 
 def simpleGoodTuring(LDM):
-    #convert ldm to numpy array
-    PD = computePD(LDM)
-    if 1 in PD:
-        raise ValueError("PD cannot be completely sparse")
-
-    LDM = np.array(LDM)
-    num_cols_LDM = len(LDM)
- 
-    # adds up all the "columns" in the LDM
-    sumColsLDM = np.sum(LDM, axis = 0)
-
     count_dict = {}
-    for i in range(len(sumColsLDM)):
-        if sumColsLDM[i] != 0:
-            count_dict[i] = int(sumColsLDM[i])
+    PD_length = LDM[0]
+    LDM = LDM[1:]
+    values, counts = np.unique(LDM, return_counts=True)
+    if len(values)==1:
+        raise ValueError("PD cannot be completely sparse")
+    for i, index in enumerate(values):
+        count_dict[index] = counts[i]
 
     max_ = max(count_dict.values())
-    L = [i for i in range(len(LDM[0]))]
-    
+    L = [i for i in range(PD_length)]
+
     SGT = simple_good_turing.SimpleGoodTuring(count_dict, max_)
     new_prop = SGT.run_sgt(L)
 
@@ -469,12 +467,12 @@ def simpleGoodTuring(LDM):
     #     sum_ +=x
     # print("sum ", sum_)
 
-    PD = [[] for i in range(len(sumColsLDM))]
+    PD = [[] for i in range(PD_length)]
 
     for i in new_prop:
         PD[i] = new_prop[i]
 
-    return PD
+    return np.array(PD)
 
 """
 checks the variance, angle, difference, and root mean square error between sparse pd, predict_proba pd and simple good turing pd.
