@@ -7,7 +7,7 @@ from scipy.stats import entropy
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import seaborn as sns
-import simple_good_turing
+# import simple_good_turing
 from sklearn.metrics import mean_squared_error
 from statistics import mean
 
@@ -176,8 +176,9 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1], num_datasets=5, num_rep
     #sparse case
     if sparse:
         LDM = [len(classes)**num_holdout_samples] #the first thing in LDM is the number of entries in the PD vector
-        i = 0
-        while i < num_datasets:
+        
+
+        for i in range(num_datasets):
             if data_generation == random_uniform or data_generation == fixed_dataset:
                 num_entries = int(proportion_of_dataset * len(X_train))
 
@@ -190,8 +191,9 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1], num_datasets=5, num_rep
                 clf.fit(subset_X, subset_y)
                 outcome = getSimplex(clf, X_test, classes, all_labels, sparse) #outcome is just an index
                 Pf.append(outcome)
+
             LDM.append(Pf)
-            i += 1
+
     #predict_proba case
     else:
         LDM = []
@@ -216,7 +218,6 @@ def getLDM(clf, X_train, X_test, y_train, classes=[0,1], num_datasets=5, num_rep
             averaged_simplex_vector /= num_repeat
             # Obtain simplex vector for current training set
             LDM.append(averaged_simplex_vector)
-
     return LDM
 
 # def getSparseLDM(clf, X_train, X_test, y_train, classes=[0,1], num_datasets=5, num_repeat=1, proportion_of_dataset=0.1, sparse=True, data_generation=random_uniform):
@@ -572,8 +573,6 @@ def quick_trial(clf, X_train, X_test, y_train, num_repeat=1, classes=[0,1], num_
     print("root mean square error sparse, SGT: ", mean_squared_error(sparse_Pd, SGT_Pd, squared=False))
     print("root mean square error sparse, predict_proba: ", mean_squared_error(sparse_Pd, predict_proba_Pd, squared=False))
     print("root mean square error predict_proba, SGT: ", mean_squared_error(predict_proba_Pd, SGT_Pd, squared=False))
-
-
 
 def plotHeatMap(LDM):
     # Transpose LDM generated so that simplex vectors are column vectors
