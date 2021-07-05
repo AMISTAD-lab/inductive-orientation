@@ -196,12 +196,36 @@ def analyzeResults(path, label, clfNames):
   tableClusters = tableClusters.groupby(['Labels','Algorithms'])['Algorithms'].count()
   tableClusters.to_csv(path, index=True)
     
-def plotPairwiseDist(list_of_PDs, clf_Names):
-  list_of_PDs = np.array(list_of_PDs)
-  pairwise_Dist = np.sum((list_of_PDs[:, np.newaxis, :] - list_of_PDs[np.newaxis, :, :])**2, axis = -1)
-  df_pairwise_Dist = pd.DataFrame(pairwise_Dist, index = clf_Names, columns = clf_Names)
-  fig, ax = plt.subplots(figsize=(12,12)) 
+def plotPairwiseDist_max(list_of_PDs, clf_Names, filepath):
+  temp_list_of_PDs = list_of_PDs[:]
+  searchSpaceSize = len(temp_list_of_PDs[0])
+  uniform_PD = [(1 / searchSpaceSize) for i in range(searchSpaceSize)]
+  temp_list_of_PDs.append(uniform_PD)
+  temp_clf_Names = clf_Names + ["UniformRandomSampling"]
+  temp_list_of_PDs = np.array(temp_list_of_PDs)
+  pairwise_Dist = np.sum((temp_list_of_PDs[:, np.newaxis, :] - temp_list_of_PDs[np.newaxis, :, :])**2, axis = -1)
+  df_pairwise_Dist = pd.DataFrame((pairwise_Dist / np.max(pairwise_Dist)), index = temp_clf_Names, columns = temp_clf_Names).round(3)
+  fig, ax = plt.subplots(figsize=(15,15))
+  sns.heatmap(df_pairwise_Dist, annot = True, cmap="YlGnBu", ax=ax, vmax=1.5)
+  plt.savefig(filepath + ".pdf", bbox_inches="tight", pad_inches=0)
+  df_pairwise_Dist.to_csv(filepath + ".csv")
+
+def plotPairwiseDist(list_of_PDs, clf_Names, filepath):
+  temp_list_of_PDs = list_of_PDs[:]
+  searchSpaceSize = len(temp_list_of_PDs[0])
+  uniform_PD = [(1 / searchSpaceSize) for i in range(searchSpaceSize)]
+  temp_list_of_PDs.append(uniform_PD)
+  temp_clf_Names = clf_Names + ["UniformRandomSampling"]
+  temp_list_of_PDs = np.array(temp_list_of_PDs)
+  pairwise_Dist = np.sum((temp_list_of_PDs[:, np.newaxis, :] - temp_list_of_PDs[np.newaxis, :, :])**2, axis = -1)
+  df_pairwise_Dist = pd.DataFrame((pairwise_Dist / np.max(pairwise_Dist)), index = temp_clf_Names, columns = temp_clf_Names).round(3)
+  fig, ax = plt.subplots(figsize=(15,15))
   sns.heatmap(df_pairwise_Dist, annot = True, cmap="YlGnBu", ax=ax)
+  plt.savefig(filepath + ".pdf", bbox_inches="tight", pad_inches=0)
+  df_pairwise_Dist.to_csv(filepath + ".csv")
+
+
+
   
 def plot_pairwise_angles(list_of_pDs, clf_Names): 
   index = np.arange(len(list_of_pDs))

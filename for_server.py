@@ -11,6 +11,7 @@ import seaborn as sns
 from sklearn.metrics import mean_squared_error
 from statistics import mean
 import os
+import time
 
 import itertools
 import random
@@ -66,7 +67,7 @@ SVC_rbf = SVC()
 MLPclf_1 = MLPClassifier(max_iter=500)
 MLPclf_3 = MLPClassifier(hidden_layer_sizes=(150,100,50), max_iter=500)
 
-from new_ldm_inductive import *
+from server_ldm_inductive import *
 import server_setup as setup
 
 
@@ -76,7 +77,9 @@ def get_LDM_PD(list_of_clf, X_train, X_test, y_train, classes=[0,1], num_dataset
     for clf in list_of_clf:
         LDM = getLDM(clf, X_train, X_test, y_train, classes = classes, num_datasets=num_datasets, num_repeat=num_repeat, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
         LDM_l.append(LDM)
-        PD_l.append(computePD(LDM, sparse=sparse))
+        #PD_l.append(computePD(LDM, sparse=sparse)) for the new code yes
+        PD_l.append(computePD(LDM)) #for the the old code
+
     return LDM_l, PD_l
 dim_reduc_l = ["PCA", "UMAP-n_neighbors=20", "UMAP-n_neighbors=15", "UMAP-n_neighbors=10", "UMAP-n_neighbors=5"]
 cluster_alg_l = ["DBSCAN-eps=0.35-min_samples=3", "DBSCAN-eps=0.25-min_samples=3", "DBSCAN-eps=0.5-min_samples=3", "DBSCAN-eps=0.10-min_samples=3"
@@ -89,13 +92,11 @@ def generate_paths(dim_reduc_l, cluster_alg_l):
         dim_reduc_function = dim_reduc[0]
         dim_reduc_parameters = dim_reduc[1:] #might give an error
         dim_reduc_parameters = {parameter.split("=")[0]:parameter.split("=")[1] for parameter in dim_reduc_parameters}
-        print(dim_reduc_parameters)
         for cluster_alg_raw in cluster_alg_l:
             cluster_alg = cluster_alg_raw.split("-")
             cluster_alg_function = cluster_alg[0]
             cluster_alg_parameters = cluster_alg[1:]
             cluster_alg_parameters = {parameter.split("=")[0]:parameter.split("=")[1] for parameter in cluster_alg_parameters}
-            print(cluster_alg_parameters)
             paths.append(dim_reduc_raw + "|" + cluster_alg_raw)
     return paths
 
@@ -111,7 +112,6 @@ def generate_plots(pD_vectors,clf_names, list_of_clf, paths, base, markers, dim_
         dim_reduc = dim_reduc.split("-")
         dim_reduc_function = dim_reduc[0]
         dim_reduc_parameters = dim_reduc[1:]
-        print(dim_reduc_parameters)
         dim_reduc_parameters = {parameter.split("=")[0]:convert_str(parameter.split("=")[1]) for parameter in dim_reduc_parameters}
 
         cluster_alg = path.split("|")[1]
@@ -128,7 +128,6 @@ def generate_plots(pD_vectors,clf_names, list_of_clf, paths, base, markers, dim_
         setup.analyzeResults(os.path.join(base, path).replace("|", "-"), labels, clf_names) #might need to save this to some sort of doc
 
 
-
 def main():
     current_folders = os.listdir()
     runs = list(filter(lambda name: name[:3]=="run", current_folders))
@@ -143,11 +142,19 @@ def main():
     dataset = pd.read_csv("EEG_Eye_State.csv")
     values = dataset.values
     X, y = values[:, :-1], values[:, -1]
-    markers = {'KNN1': "$a$", 'KNN3': "$b$", 'KNN11': "$c$", 'randomForest1': "$d$", 'randomForest5': "$e$", 
-            'randomForest10': "$f$", 'randomForest25': "$g$",'randomForest100': "$h$",'naiveBayesClassifier': "$i$",
-            'adaboostClassifier': "$j$",'gradientBoostingClassifier': "$k$", 'decisionTreeClassifier': "$l$", 
-            'quadraticDiscriminantAnalysis': "$m$", 'logisticRegression': "$n$", 'SGDClassifier_hinge': "$o$", 
-            'SGDClassifier_log': "$p$", 'MLPclf_1': "$q$", 'MLPclf_3': "$r$", "SVC_linear": "$s$", "SVC_rbf": "$t$" }
+    # markers = {'KNN1': "$a$", 'KNN3': "$b$", 'KNN11': "$c$", 'randomForest1': "$d$", 'randomForest5': "$e$", 
+    #         'randomForest10': "$f$", 'randomForest25': "$g$",'randomForest100': "$h$",'naiveBayesClassifier': "$i$",
+    #         'adaboostClassifier': "$j$",'gradientBoostingClassifier': "$k$", 'decisionTreeClassifier': "$l$", 
+    #         'quadraticDiscriminantAnalysis': "$m$", 'logisticRegression': "$n$", 'SGDClassifier_hinge': "$o$", 
+    #         'SGDClassifier_log': "$p$", 'MLPclf_1': "$q$", 'MLPclf_3': "$r$", "SVC_linear": "$s$", "SVC_rbf": "$t$" }
+    markers = {'KNN1': "$\\bullet$", 'KNN3': "$\\sigma$", 'KNN11': "$\\blacksquare$", 'randomForest1': "$\u2605$", 
+                'randomForest5': "$\u25C6$", 'randomForest10': "$\\spadesuit$", 'randomForest25': "$\\blacktriangleleft$",
+                'randomForest100': "$\\blacktriangleright$",'naiveBayesClassifier': "$\\blacktriangledown$",
+                'adaboostClassifier': "$\\P$",'gradientBoostingClassifier': "$\u03c0$", 'decisionTreeClassifier': "$\Omega$", 
+                'quadraticDiscriminantAnalysis': "$\\mathrm{\\mathbb{A}}$", 'logisticRegression': "$\u2B22$", 
+                'SGDClassifier_hinge': "$\u2716$", 'SGDClassifier_log': "$\u271A$", 'MLPclf_1': "$\u25b2$", 'MLPclf_3': "$\mathcal{r}$", 
+                "SVC_linear": "$\mathcal{s}$", "SVC_rbf": "$\mathcal{T}$" }
+
     dim_reduc_function_dict = {"PCA": PCA, "UMAP": UMAP}
     cluster_alg_function_dict = {"DBSCAN":DBSCAN, "AgglomerativeClustering":AgglomerativeClustering, "MeanShift":MeanShift}
     num_repeats = 3
@@ -155,7 +162,7 @@ def main():
     clf_names = ["decisionTreeClassifier"]*num_repeats + ["KNN1"]*num_repeats + ["KNN11"]*num_repeats
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=5, random_state=42)
-    LDM_l, PD_l = get_LDM_PD(list_of_clf, X_train, X_test, y_train, num_datasets=505, num_repeat=1, proportion_of_dataset=0.04)
+    LDM_l, PD_l = get_LDM_PD(list_of_clf, X_train, X_test, y_train, num_datasets=805, num_repeat=20, proportion_of_dataset=0.04)
     
     with open(os.path.join(run_path, 'ldm.txt'), 'w') as f:
         csvwriter = csv.writer(f)
@@ -164,7 +171,10 @@ def main():
     with open(os.path.join(run_path, 'pd.txt'), 'w') as f:
         csvwriter = csv.writer(f)
         csvwriter.writerows(PD_l)
-    
+
+    setup.plotPairwiseDist_max(PD_l, clf_names, os.path.join(run_path, 'pairwise_max'))
+    setup.plotPairwiseDist(PD_l, clf_names, os.path.join(run_path, 'pairwise'))
+
     dim_reduc_l = ["PCA", "UMAP-n_neighbors=20", "UMAP-n_neighbors=15", "UMAP-n_neighbors=10", "UMAP-n_neighbors=5"]
     cluster_alg_l = ["DBSCAN-eps=0.35-min_samples=3", "DBSCAN-eps=0.25-min_samples=3", "DBSCAN-eps=0.5-min_samples=3", 
                     "DBSCAN-eps=0.10-min_samples=3", "AgglomerativeClustering-n_clusters=2", 
@@ -174,4 +184,10 @@ def main():
 
 
 if __name__ == "__main__":
+    begin_time = time.time()
+    print("begin_time: ", begin_time)
     main()
+    end_time=time.time()
+    print("end_time: ", end_time)
+    duration = end_time - begin_time
+    print("time elapsed: ", duration)
