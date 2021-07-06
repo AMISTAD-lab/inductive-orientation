@@ -7,7 +7,7 @@ from scipy.stats import entropy
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import seaborn as sns
-import simple_good_turing
+#import simple_good_turing
 from sklearn.metrics import mean_squared_error
 from statistics import mean
 
