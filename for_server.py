@@ -1,9 +1,33 @@
 import itertools
+import random
+import math
+import numpy as np
+from scipy.sparse import data
+from scipy.stats import entropy
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import seaborn as sns
+# import simple_good_turing
+from sklearn.metrics import mean_squared_error
+from statistics import mean
+import os
+import time
+
+import itertools
+import random
+import math
 import numpy as np
 import pandas as pd
 import csv
 from sklearn.model_selection import train_test_split
 
+#import clean_data
+import csv
+
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+from umap import UMAP
+from sklearn.cluster import DBSCAN, KMeans, MeanShift, AgglomerativeClustering
 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
@@ -29,153 +53,18 @@ adaboostClassifier = AdaBoostClassifier()
 gradientBoostingClassifier = GradientBoostingClassifier()
 decisionTreeClassifier = DecisionTreeClassifier()
 quadraticDiscriminantAnalysis = QuadraticDiscriminantAnalysis()
-logisticRegression = LogisticRegression(max_iter=500)
-SGDClassifier_hinge = SGDClassifier()
-SGDClassifier_log = SGDClassifier(loss='log')
+logisticRegression = LogisticRegression(max_iter=2000)
+SGDClassifier_hinge = SGDClassifier(max_iter=2000)
+SGDClassifier_log = SGDClassifier(loss='log', max_iter=2000)
 SVC_linear_kernel = SVC(kernel="linear")
 SVC_linear = LinearSVC()
 SVC_rbf = SVC()
-MLPclf_1 = MLPClassifier(max_iter=500)
-MLPclf_3 = MLPClassifier(hidden_layer_sizes=(150,100,50), max_iter=500)
+MLPclf_1 = MLPClassifier(max_iter=2000)
+MLPclf_3 = MLPClassifier(hidden_layer_sizes=(150,100,50), max_iter=2000)
 
-def random_uniform(X_train, y_train, num_entries, i=0):
-    indices = np.arange(len(X_train))
-    np.random.shuffle(indices)
-    indices = indices[:num_entries] #no replacement
-    random_subset_X = [X_train[i] for i in indices]
-    random_subset_y = [y_train[i] for i in indices]
-    return random_subset_X, random_subset_y
-# def random_uniform(X_train, y_train, num_entries, i=0):
-#     indices = np.arange(len(X_train))
-#     np.random.shuffle(indices)
-#     indices = indices[:num_entries] #no replacement
-#     random_subset_X = X_train.iloc[indices]
-#     random_subset_y = y_train.iloc[indices]
-#     return random_subset_X, random_subset_y
+from server_ldm_inductive import *
+import server_setup as setup
 
-'''splitting the dataset - no overlap between columns'''
-def split_dataset(X_train, y_train, num_entries, i=0):
-    start_index = i*num_entries
-    subset_X = X_train[start_index:start_index+num_entries]
-    subset_y = y_train[start_index:start_index+num_entries]
-    return subset_X, subset_y
-
-def fixed_dataset(X_train, y_train, num_entries, i=0):
-    subset_X = X_train[:num_entries]
-    subset_y = y_train[:num_entries]
-    return subset_X, subset_y
-    
-#Getting the LDM, and PD
-'''
-getSimplex()) takes in a classifier (clf), a set of test features (X_test), and a list of possible classes
-to be classified into (classes), and returns a normalized probability distribution (a simplex vector)
-as a numpy array
-
-inputs:
-    clf: an untrained classifier
-    X_test: a list of test features
-    classes: a list of possible classes, for example [0,1,2]
-
-outputs: 
-    simplex vector: a numpy array. each entry in the array includes the probability the classification 
-    algorithm will give the corresponding sequence of labels as its prediction
-'''
-def getSimplex(clf, X_test, classes, all_labels, sparse=True):
-    #the sparse case
-    if sparse:
-        predicted_labels = clf.predict(X_test) # a list of predictions, one for each thing in X_test
-        predicted_labels = [int(x) for x in predicted_labels]
-        for i in range(0, len(all_labels)): #returns the index of all_labels that matches the predicted_labels
-            if tuple(predicted_labels) == all_labels[i]:
-                return i
-    #predict proba case
-    else:
-        simplex_vector = []
-        alpha = 0.000001 # Used for alpha smoothing
-        sum_probs = 0    # Used for normailization later
-        y_pred_prob = clf.predict_proba(X_test)
-        # Iterate through all_labels and calculate probabilities
-        # based on y_pred_prob values
-        for i in range(0, len(all_labels)):
-            #current_prob = alpha
-            current_prob = 1.0
-
-            for j in range(0, len(all_labels[i])):
-                for class_index in classes:
-                    if (all_labels[i][j] == class_index): #and (class_index < len(y_pred_prob[j]))):
-                            current_prob *= (alpha if y_pred_prob[j][class_index] == 0 else y_pred_prob[j][class_index])
-                            #current_prob = 0.000001 * 0.000001 if y_pred_prob[holdoutsamplei][class_index]
-            sum_probs += current_prob
-            simplex_vector.append(current_prob)
-            simplex_vector = np.array(simplex_vector)
-            return simplex_vector
-
-def getLDM(clf, X_train, X_test, y_train, classes=[0,1], num_datasets=5, num_repeat=1, proportion_of_dataset=0.1, sparse=True, data_generation=random_uniform):
-    # Initialize a labelling distribution matrix to be constructed
-    num_holdout_samples = len(X_test)
-    all_labels = list(itertools.product(classes, repeat=num_holdout_samples))
-    #sparse case
-    if sparse:
-        LDM = [len(classes)**num_holdout_samples] #the first thing in LDM is the number of entries in the PD vector
-        
-
-        for i in range(num_datasets):
-            if data_generation == random_uniform or data_generation == fixed_dataset:
-                num_entries = int(proportion_of_dataset * len(X_train))
-
-            elif data_generation == split_dataset or data_generation:
-                num_entries = len(X_train)//num_datasets
-
-            subset_X, subset_y = data_generation(X_train, y_train, num_entries, i=i)
-            Pf = [] # shares the same training data, has length equal to num_repeat, average becomes P bar F/ one column of the LDM
-            for repeat in range(num_repeat):
-                clf.fit(subset_X, subset_y)
-                outcome = getSimplex(clf, X_test, classes, all_labels, sparse) #outcome is just an index
-                Pf.append(outcome)
-
-            LDM.append(Pf)
-
-    #predict_proba case
-    else:
-        LDM = []
-        for i in range(num_datasets):
-            # Shuffle the training labels randomly to generate different training
-            # sets for each iteration
-            clf.classes_ = classes
-            # Train the model using the current training set
-            if data_generation == random_uniform or data_generation == fixed_dataset:
-                num_entries = int(proportion_of_dataset * len(X_train))
-
-            elif data_generation == split_dataset or data_generation:
-                num_entries = len(X_train)//num_datasets
-
-            subset_X, subset_y = data_generation(X_train, y_train, num_entries, i=i) 
-
-            averaged_simplex_vector = np.zeros(len(all_labels))
-            for i in range(num_repeat):
-                clf.fit(subset_X, subset_y)
-                current_simplex_vector = getSimplex(clf, X_test, classes, all_labels,sparse)
-                averaged_simplex_vector += current_simplex_vector
-            averaged_simplex_vector /= num_repeat
-            # Obtain simplex vector for current training set
-            LDM.append(averaged_simplex_vector)
-    return LDM
-
-
-def computePD(LDM, sparse=True):
-    #sprase case
-    if sparse:
-        PD_length = LDM[0]
-        LDM = LDM[1:]
-        values, counts = np.unique(LDM, return_counts=True)
-        counts = counts / np.sum(counts) # to get the propobability distribution at each non-zero index
-        PD = np.zeros(PD_length)
-        for i, index in enumerate(values):
-            PD[index] = counts[i]
-    #predict_proba case
-    else:
-        PD = np.mean(LDM, axis=0)
-    return PD
 
 def get_LDM_PD(list_of_clf, X_train, X_test, y_train, classes=[0,1], num_datasets=5, num_repeat=1, proportion_of_dataset=0.1, sparse=True, data_generation=random_uniform):
     LDM_l = []
@@ -183,33 +72,131 @@ def get_LDM_PD(list_of_clf, X_train, X_test, y_train, classes=[0,1], num_dataset
     for clf in list_of_clf:
         LDM = getLDM(clf, X_train, X_test, y_train, classes = classes, num_datasets=num_datasets, num_repeat=num_repeat, proportion_of_dataset=proportion_of_dataset, sparse=sparse, data_generation=data_generation)
         LDM_l.append(LDM)
-        PD_l.append(computePD(LDM, sparse=sparse))
-    return LDM_l, PD_l
+        #PD_l.append(computePD(LDM, sparse=sparse)) for the new code yes
+        PD_l.append(computePD(LDM)) #for the the old code
 
+    return LDM_l, PD_l
+dim_reduc_l = ["PCA", "UMAP-n_neighbors=20", "UMAP-n_neighbors=15", "UMAP-n_neighbors=10", "UMAP-n_neighbors=5"]
+cluster_alg_l = ["DBSCAN-eps=0.35-min_samples=3", "DBSCAN-eps=0.25-min_samples=3", "DBSCAN-eps=0.5-min_samples=3", "DBSCAN-eps=0.10-min_samples=3"
+                    , "AgglomerativeClustering-n_clusters=2", "AgglomerativeClustering-n_clusters=4", "AgglomerativeClustering-n_clusters=8",
+                    "MeanShift"]
+def generate_paths(dim_reduc_l, cluster_alg_l):
+    paths = []
+    for dim_reduc_raw in dim_reduc_l:
+        dim_reduc = dim_reduc_raw.split("-")
+        dim_reduc_function = dim_reduc[0]
+        dim_reduc_parameters = dim_reduc[1:] #might give an error
+        dim_reduc_parameters = {parameter.split("=")[0]:parameter.split("=")[1] for parameter in dim_reduc_parameters}
+        for cluster_alg_raw in cluster_alg_l:
+            cluster_alg = cluster_alg_raw.split("-")
+            cluster_alg_function = cluster_alg[0]
+            cluster_alg_parameters = cluster_alg[1:]
+            cluster_alg_parameters = {parameter.split("=")[0]:parameter.split("=")[1] for parameter in cluster_alg_parameters}
+            paths.append(dim_reduc_raw + "|" + cluster_alg_raw)
+    return paths
+
+def convert_str(n):
+    if "." in n:
+        return float(n)
+    else:
+        return int(n)
+
+def generate_plots(pD_vectors,clf_names, list_of_clf, paths, base, markers, dim_reduc_function_dict, cluster_alg_function_dict):
+    for path in paths:
+        dim_reduc = path.split("|")[0]
+        dim_reduc = dim_reduc.split("-")
+        dim_reduc_function = dim_reduc[0]
+        dim_reduc_parameters = dim_reduc[1:]
+        dim_reduc_parameters = {parameter.split("=")[0]:convert_str(parameter.split("=")[1]) for parameter in dim_reduc_parameters}
+
+        cluster_alg = path.split("|")[1]
+        cluster_alg = cluster_alg.split("-")
+        cluster_alg_function = cluster_alg[0]
+        cluster_alg_parameters = cluster_alg[1:]
+        cluster_alg_parameters = {parameter.split("=")[0]:convert_str(parameter.split("=")[1]) for parameter in cluster_alg_parameters}
+        
+        labels, list_of_PD = setup.cluster(pD_vectors, cluster_alg_function_dict[cluster_alg_function], list_of_clf, cluster_alg_parameters)
+        visualDim = 2
+        reduceDim = True
+        dim_reduc_parameters = {**{"n_components":2} , **dim_reduc_parameters}
+        setup.cluster_plot(list_of_PD, clf_names, os.path.join(base, path).replace("|", "-") , markers, labels, visualDim, reduceDim, dim_reduc_function_dict[dim_reduc_function], dim_reduc_parameters)
+        setup.analyzeResults(os.path.join(base, path).replace("|", "-"), labels, clf_names) #might need to save this to some sort of doc
 
 
 def main():
-    dataset = pd.read_csv("EEG_Eye_State.csv")
+    current_folders = os.listdir()
+    runs = list(filter(lambda name: name[:3]=="run", current_folders))
+    if len(runs)==0:
+        run_path = "run0"
+    else:
+        runs = [int(run[3:]) for run in runs]
+        run_path = "run" + str(max(runs)+1)
+    os.mkdir(run_path)
+    cluster_path = os.path.join(run_path, "clusters")
+    os.mkdir(cluster_path)
+    dataset = pd.read_csv("letters_cleaned.csv", header = None)
     values = dataset.values
     X, y = values[:, :-1], values[:, -1]
 
-    
+    # markers = {'KNN1': "$a$", 'KNN3': "$b$", 'KNN11': "$c$", 'randomForest1': "$d$", 'randomForest5': "$e$", 
+    #         'randomForest10': "$f$", 'randomForest25': "$g$",'randomForest100': "$h$",'naiveBayesClassifier': "$i$",
+    #         'adaboostClassifier': "$j$",'gradientBoostingClassifier': "$k$", 'decisionTreeClassifier': "$l$", 
+    #         'quadraticDiscriminantAnalysis': "$m$", 'logisticRegression': "$n$", 'SGDClassifier_hinge': "$o$", 
+    #         'SGDClassifier_log': "$p$", 'MLPclf_1': "$q$", 'MLPclf_3': "$r$", "SVC_linear": "$s$", "SVC_rbf": "$t$" }
+    markers = {'KNN1': "$\\bullet$", 'KNN3': "$\\sigma$", 'KNN11': "$\\blacksquare$", 'randomForest1': "$\u2605$", 
+                'randomForest5': "$\u25C6$", 'randomForest10': "$\\spadesuit$", 'randomForest25': "$\\blacktriangleleft$",
+                'randomForest100': "$\\blacktriangleright$",'naiveBayesClassifier': "$\\blacktriangledown$",
+                'adaboostClassifier': "$\\P$",'gradientBoostingClassifier': "$\u03c0$", 'decisionTreeClassifier': "$\Omega$", 
+                'quadraticDiscriminantAnalysis': "$\\mathrm{\\mathbb{A}}$", 'logisticRegression': "$\u2B22$", 
+                'SGDClassifier_hinge': "$\u2716$", 'SGDClassifier_log': "$\u271A$", 'MLPclf_1': "$\u25b2$", 'MLPclf_3': "$\mathcal{r}$", 
+                "SVC_linear": "$\mathcal{s}$", "SVC_rbf": "$\mathcal{T}$" }
+
+    dim_reduc_function_dict = {"PCA": PCA, "UMAP": UMAP}
+    cluster_alg_function_dict = {"DBSCAN":DBSCAN, "AgglomerativeClustering":AgglomerativeClustering, "MeanShift":MeanShift}
     num_repeats = 3
-    list_of_clf=[decisionTreeClassifier]*num_repeats 
+    list_of_clf=[KNN1]*num_repeats + [KNN3]*num_repeats + [KNN11]*num_repeats + [randomForest1]*num_repeats \
+                +[randomForest5]*num_repeats +[randomForest10]num_repeats +[randomForest25]num_repeats \
+                +[randomForest100]*num_repeats + [naiveBayesClassifier]*num_repeats + [adaboostClassifier]*num_repeats \
+                + [gradientBoostingClassifier]*num_repeats  + [decisionTreeClassifier]*num_repeats \
+                + [quadraticDiscriminantAnalysis]*num_repeats +[logisticRegression] * num_repeats + [SGDClassifier_hinge]*num_repeats \
+                + [SGDClassifier_log]*num_repeats + [MLPclf_1] * num_repeats + [MLPclf_3] * num_repeats \
+                + [SVC_linear_kernel]*num_repeats + [SVC_linear]*num_repeats + [SVC_rbf]*num_repeats
+    clf_names = ['KNN1']*num_repeats + ['KNN3']*num_repeats + ['KNN11']*num_repeats + ['randomForest1']*num_repeats \
+                +['randomForest5']*num_repeats +['randomForest10']*num_repeats +['randomForest25']*num_repeats \
+                +['randomForest100']*num_repeats + ['naiveBayesClassifier']*num_repeats + ['adaboostClassifier']*num_repeats \
+                + ['gradientBoostingClassifier']*num_repeats  + ['decisionTreeClassifier']*num_repeats \
+                + ['quadraticDiscriminantAnalysis']*num_repeats +['logisticRegression'] * num_repeats + ['SGDClassifier_hinge']*num_repeats \
+                + ['SGDClassifier_log']*num_repeats  + ['MLPclf_1'] * num_repeats + ['MLPclf_3'] * num_repeats \
+                + ['SVC_linear_kernel']*num_repeats + ['SVC_linear']*num_repeats + ['SVC_rbf']*num_repeats
+    
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=5, random_state=42)
-    LDM_l, PD_l = get_LDM_PD(list_of_clf, X_train, X_test, y_train, num_datasets=505, num_repeat=1, proportion_of_dataset=0.04)
+    LDM_l, PD_l = get_LDM_PD(list_of_clf, X_train, X_test, y_train, num_datasets=305, num_repeat=20, proportion_of_dataset=0.16)
     
-
-    with open('ldm.txt', 'w') as f:
+    with open(os.path.join(run_path, 'ldm.txt'), 'w') as f:
         csvwriter = csv.writer(f)
         csvwriter.writerows(LDM_l)
 
-    with open('pd.txt', 'w') as f:
+    with open(os.path.join(run_path, 'pd.txt'), 'w') as f:
         csvwriter = csv.writer(f)
         csvwriter.writerows(PD_l)
 
+    setup.plotPairwiseDist_max(PD_l, clf_names, os.path.join(run_path, 'pairwise_max'))
+    setup.plotPairwiseDist(PD_l, clf_names, os.path.join(run_path, 'pairwise'))
+
+    dim_reduc_l = ["PCA", "UMAP-n_neighbors=20", "UMAP-n_neighbors=15", "UMAP-n_neighbors=10", "UMAP-n_neighbors=5"]
+    cluster_alg_l = ["DBSCAN-eps=0.35-min_samples=3", "DBSCAN-eps=0.25-min_samples=3", "DBSCAN-eps=0.5-min_samples=3", 
+                    "DBSCAN-eps=0.10-min_samples=3", "AgglomerativeClustering-n_clusters=2", 
+                    "AgglomerativeClustering-n_clusters=4", "AgglomerativeClustering-n_clusters=8","MeanShift"]
+    paths = generate_paths(dim_reduc_l, cluster_alg_l)
+    generate_plots(PD_l,clf_names, list_of_clf, paths, cluster_path, markers, dim_reduc_function_dict, cluster_alg_function_dict)
 
 
 if __name__ == "__main__":
+    begin_time = time.time()
+    print("begin_time: ", begin_time)
     main()
+    end_time=time.time()
+    print("end_time: ", end_time)
+    duration = end_time - begin_time
+    print("time elapsed: ", duration)
