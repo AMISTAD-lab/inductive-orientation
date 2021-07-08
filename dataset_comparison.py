@@ -3,7 +3,8 @@ import numpy as np
 from scipy.spatial.distance import cdist
 
 
-dataset = pd.read_csv("letters_cleaned.csv", header = None)
+dataset = pd.read_csv("online_shoppers_intention.csv", header = None)
+dataset = dataset.sample(frac=0.75)
 values = dataset.values
 X, y = values[:, :-1], values[:, -1]
 
@@ -23,8 +24,10 @@ def get_avg_dist(dataset):
     return get_min_dist(pairwise_Dist)
 
 
-def get_min_dist(pairwise_Dist):
-    min_dist = np.where(pairwise_Dist>0, pairwise_Dist, np.inf).min(axis=1)
+def get_min_dist(pairwise_Dist, same=True):
+    if same:
+      np.fill_diagonal(pairwise_Dist, np.inf)
+    min_dist = np.min(pairwise_Dist, axis=1)
     avg_dist = np.average(min_dist)
     if avg_dist == np.inf:
         avg_dist = 0
@@ -45,8 +48,7 @@ print("distance to same class label ", avg_dist_same)
 points0 = convert_to_np(dataset0)
 points1 = convert_to_np(dataset1)
 
-#get dist same class label
+#get dist different class label
 dist_diff = cdist(points0, points1)
-avg_diff_dist = get_min_dist(dist_diff)
+avg_diff_dist = get_min_dist(dist_diff, same=False)
 print("distance to different class label ", avg_diff_dist)
-
