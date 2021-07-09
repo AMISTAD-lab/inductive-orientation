@@ -134,44 +134,45 @@ def main():
     os.mkdir(run_path)
     cluster_path = os.path.join(run_path, "clusters")
     os.mkdir(cluster_path)
-    dataset = pd.read_csv("letters_cleaned.csv", header = None)
+    dataset = pd.read_csv("EEG_Eye_State.csv", header = None)
     values = dataset.values
     X, y = values[:, :-1], values[:, -1]
 
-    # markers = {'KNN1': "$a$", 'KNN3': "$b$", 'KNN11': "$c$", 'randomForest1': "$d$", 'randomForest5': "$e$", 
-    #         'randomForest10': "$f$", 'randomForest25': "$g$",'randomForest100': "$h$",'naiveBayesClassifier': "$i$",
+    markers = {'KNN1': "$a$", 'KNN3': "$b$", 'KNN11': "$c$", 'randomForest1': "$d$", 'randomForest5': "$e$",
+             'randomForest10': "$f$", 'randomForest25': "$g$"}#,'randomForest100': "$h$",'naiveBayesClassifier': "$i$",}
     #         'adaboostClassifier': "$j$",'gradientBoostingClassifier': "$k$", 'decisionTreeClassifier': "$l$", 
     #         'quadraticDiscriminantAnalysis': "$m$", 'logisticRegression': "$n$", 'SGDClassifier_hinge': "$o$", 
     #         'SGDClassifier_log': "$p$", 'MLPclf_1': "$q$", 'MLPclf_3': "$r$", "SVC_linear": "$s$", "SVC_rbf": "$t$" }
-    markers = {'KNN1': "$\\bullet$", 'KNN3': "$\\sigma$", 'KNN11': "$\\blacksquare$", 'randomForest1': "$\u2605$", 
-                'randomForest5': "$\u25C6$", 'randomForest10': "$\\spadesuit$", 'randomForest25': "$\\blacktriangleleft$",
-                'randomForest100': "$\\blacktriangleright$",'naiveBayesClassifier': "$\\blacktriangledown$",
-                'adaboostClassifier': "$\\P$",'gradientBoostingClassifier': "$\u03c0$", 'decisionTreeClassifier': "$\Omega$", 
-                'quadraticDiscriminantAnalysis': "$\\mathrm{\\mathbb{A}}$", 'logisticRegression': "$\u2B22$", 
-                'SGDClassifier_hinge': "$\u2716$", 'SGDClassifier_log': "$\u271A$", 'MLPclf_1': "$\u25b2$", 'MLPclf_3': "$\mathcal{r}$", 
-                "SVC_linear": "$\mathcal{s}$", "SVC_rbf": "$\mathcal{T}$" }
+    #markers = markers = {'randomForest100': "$\\blacktriangleright$"}
+    #{'KNN1': "$\\bullet$", 'KNN3': "$\\sigma$", 'KNN11': "$\\blacksquare$", 'randomForest1': "$\u2605$"}#, 
+                # 'randomForest5': "$\u25C6$", 'randomForest10': "$\\spadesuit$", 'randomForest25': "$\\blacktriangleleft$",
+                # 'randomForest100': "$\\blacktriangleright$",'naiveBayesClassifier': "$\\blacktriangledown$",
+                # 'adaboostClassifier': "$\\P$",'gradientBoostingClassifier': "$\u03c0$", 'decisionTreeClassifier': "$\Omega$", 
+                # 'quadraticDiscriminantAnalysis': "$\\mathrm{\\mathbb{A}}$", 'logisticRegression': "$\u2B22$", 
+                # 'SGDClassifier_hinge': "$\u2716$", 'SGDClassifier_log': "$\u271A$", 'MLPclf_1': "$\u25b2$", 'MLPclf_3': "$\mathcal{r}$", 
+                # "SVC_linear": "$\mathcal{s}$", "SVC_rbf": "$\mathcal{T}$" }
 
     dim_reduc_function_dict = {"PCA": PCA, "UMAP": UMAP}
     cluster_alg_function_dict = {"DBSCAN":DBSCAN, "AgglomerativeClustering":AgglomerativeClustering, "MeanShift":MeanShift}
     num_repeats = 3
     list_of_clf=[KNN1]*num_repeats + [KNN3]*num_repeats + [KNN11]*num_repeats + [randomForest1]*num_repeats \
-                +[randomForest5]*num_repeats +[randomForest10]*num_repeats +[randomForest25]*num_repeats \
-                +[randomForest100]*num_repeats + [naiveBayesClassifier]*num_repeats + [adaboostClassifier]*num_repeats \
-                + [gradientBoostingClassifier]*num_repeats  + [decisionTreeClassifier]*num_repeats \
-                + [quadraticDiscriminantAnalysis]*num_repeats +[logisticRegression] * num_repeats + [SGDClassifier_hinge]*num_repeats \
-                + [SGDClassifier_log]*num_repeats + [MLPclf_1] * num_repeats + [MLPclf_3] * num_repeats \
-                + [SVC_linear_kernel]*num_repeats + [SVC_linear]*num_repeats + [SVC_rbf]*num_repeats
+                +[randomForest5]*num_repeats +[randomForest10]*num_repeats +[randomForest25]*num_repeats #\
+                # +[randomForest100]*num_repeats + [naiveBayesClassifier]*num_repeats + [adaboostClassifier]*num_repeats \
+                # + [gradientBoostingClassifier]*num_repeats  + [decisionTreeClassifier]*num_repeats \
+                # + [quadraticDiscriminantAnalysis]*num_repeats +[logisticRegression] * num_repeats + [SGDClassifier_hinge]*num_repeats \
+                # + [SGDClassifier_log]*num_repeats + [MLPclf_1] * num_repeats + [MLPclf_3] * num_repeats \
+                # + [SVC_linear_kernel]*num_repeats + [SVC_linear]*num_repeats + [SVC_rbf]*num_repeats
     clf_names = ['KNN1']*num_repeats + ['KNN3']*num_repeats + ['KNN11']*num_repeats + ['randomForest1']*num_repeats \
-                +['randomForest5']*num_repeats +['randomForest10']*num_repeats +['randomForest25']*num_repeats \
-                +['randomForest100']*num_repeats + ['naiveBayesClassifier']*num_repeats + ['adaboostClassifier']*num_repeats \
-                + ['gradientBoostingClassifier']*num_repeats  + ['decisionTreeClassifier']*num_repeats \
-                + ['quadraticDiscriminantAnalysis']*num_repeats +['logisticRegression'] * num_repeats + ['SGDClassifier_hinge']*num_repeats \
-                + ['SGDClassifier_log']*num_repeats  + ['MLPclf_1'] * num_repeats + ['MLPclf_3'] * num_repeats \
-                + ['SVC_linear_kernel']*num_repeats + ['SVC_linear']*num_repeats + ['SVC_rbf']*num_repeats
-    
+                +['randomForest5']*num_repeats +['randomForest10']*num_repeats +['randomForest25']*num_repeats #\
+                # +['randomForest100']*num_repeats + ['naiveBayesClassifier']*num_repeats + ['adaboostClassifier']*num_repeats \
+                # + ['gradientBoostingClassifier']*num_repeats  + ['decisionTreeClassifier']*num_repeats \
+                # + ['quadraticDiscriminantAnalysis']*num_repeats +['logisticRegression'] * num_repeats + ['SGDClassifier_hinge']*num_repeats \
+                # + ['SGDClassifier_log']*num_repeats  + ['MLPclf_1'] * num_repeats + ['MLPclf_3'] * num_repeats \
+                # + ['SVC_linear_kernel']*num_repeats + ['SVC_linear']*num_repeats + ['SVC_rbf']*num_repeats
+
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=5, random_state=42)
-    LDM_l, PD_l = get_LDM_PD(list_of_clf, X_train, X_test, y_train, num_datasets=305, num_repeat=20, proportion_of_dataset=0.16)
+    LDM_l, PD_l = get_LDM_PD(list_of_clf, X_train, X_test, y_train, num_datasets=800, num_repeat=20, proportion_of_dataset=0.04)
     
     with open(os.path.join(run_path, 'ldm.txt'), 'w') as f:
         csvwriter = csv.writer(f)
