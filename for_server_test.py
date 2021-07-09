@@ -169,10 +169,10 @@ def main():
                 # + ['quadraticDiscriminantAnalysis']*num_repeats +['logisticRegression'] * num_repeats + ['SGDClassifier_hinge']*num_repeats \
                 # + ['SGDClassifier_log']*num_repeats  + ['MLPclf_1'] * num_repeats + ['MLPclf_3'] * num_repeats \
                 # + ['SVC_linear_kernel']*num_repeats + ['SVC_linear']*num_repeats + ['SVC_rbf']*num_repeats
-    
+
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=5, random_state=42)
-    LDM_l, PD_l = get_LDM_PD(list_of_clf, X_train, X_test, y_train, num_datasets=305, num_repeat=20, proportion_of_dataset=0.16)
+    LDM_l, PD_l = get_LDM_PD(list_of_clf, X_train, X_test, y_train, num_datasets=800, num_repeat=20, proportion_of_dataset=0.04)
     
     with open(os.path.join(run_path, 'ldm.txt'), 'w') as f:
         csvwriter = csv.writer(f)
