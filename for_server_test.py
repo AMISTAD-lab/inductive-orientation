@@ -162,9 +162,12 @@ def main():
                 # + [quadraticDiscriminantAnalysis]*num_repeats +[logisticRegression] * num_repeats + [SGDClassifier_hinge]*num_repeats \
                 # + [SGDClassifier_log]*num_repeats + [MLPclf_1] * num_repeats + [MLPclf_3] * num_repeats \
                 # + [SVC_linear_kernel]*num_repeats + [SVC_linear]*num_repeats + [SVC_rbf]*num_repeats
+
+                #KNN1, 3, 11, and RF 1, 5, 10 RF25
+                #100, Naive, Adaboost
     clf_names = ['KNN1']*num_repeats + ['KNN3']*num_repeats + ['KNN11']*num_repeats + ['randomForest1']*num_repeats \
-                +['randomForest5']*num_repeats +['randomForest10']*num_repeats +['randomForest25']*num_repeats #\
-                # +['randomForest100']*num_repeats + ['naiveBayesClassifier']*num_repeats + ['adaboostClassifier']*num_repeats \
+                +['randomForest5']*num_repeats +['randomForest10']*num_repeats +['randomForest25']*num_repeats# \
+                # ['randomForest100']*num_repeats + ['naiveBayesClassifier']*num_repeats + ['adaboostClassifier']*num_repeats #\
                 # + ['gradientBoostingClassifier']*num_repeats  + ['decisionTreeClassifier']*num_repeats \
                 # + ['quadraticDiscriminantAnalysis']*num_repeats +['logisticRegression'] * num_repeats + ['SGDClassifier_hinge']*num_repeats \
                 # + ['SGDClassifier_log']*num_repeats  + ['MLPclf_1'] * num_repeats + ['MLPclf_3'] * num_repeats \
