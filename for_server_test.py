@@ -155,7 +155,7 @@ def main():
     dim_reduc_function_dict = {"PCA": PCA, "UMAP": UMAP}
     cluster_alg_function_dict = {"DBSCAN":DBSCAN, "AgglomerativeClustering":AgglomerativeClustering, "MeanShift":MeanShift}
     num_repeats = 3
-    list_of_clf=[MLPclf_1] * num_repeats + [MLPclf_3] * num_repeats
+    list_of_clf=[SVC_linear_kernel]*num_repeats + [SVC_linear]*num_repeats + [SVC_rbf]*num_repeats
         # randomForest100]*num_repeats + [naiveBayesClassifier]*num_repeats + [adaboostClassifier]*num_repeats \
         #         + [gradientBoostingClassifier]*num_repeats  + [decisionTreeClassifier]*num_repeats 
     # [KNN1]*num_repeats + [KNN3]*num_repeats + [KNN11]*num_repeats + [randomForest1]*num_repeats \
@@ -171,7 +171,7 @@ def main():
                 #qda, log, SGD
                 #mlp
                 #svc
-    clf_names = ['MLPclf_1'] * num_repeats + ['MLPclf_3'] * num_repeats
+    clf_names = ['SVC_linear_kernel']*num_repeats + ['SVC_linear']*num_repeats + ['SVC_rbf']*num_repeats
     # ['randomForest100']*num_repeats + ['naiveBayesClassifier']*num_repeats + ['adaboostClassifier']*num_repeats \
     #              + ['gradientBoostingClassifier']*num_repeats  + ['decisionTreeClassifier']*num_repeats
     # ['KNN1']*num_repeats + ['KNN3']*num_repeats + ['KNN11']*num_repeats + ['randomForest1']*num_repeats \
