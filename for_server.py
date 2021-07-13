@@ -149,7 +149,7 @@ def main():
                 'adaboostClassifier': "$\\P$",'gradientBoostingClassifier': "$\u03c0$", 'decisionTreeClassifier': "$\Omega$", 
                 'quadraticDiscriminantAnalysis': "$\\mathrm{\\mathbb{A}}$", 'logisticRegression': "$\u2B22$", 
                 'SGDClassifier_hinge': "$\u2716$", 'SGDClassifier_log': "$\u271A$", 'MLPclf_1': "$\u25b2$", 'MLPclf_3': "$\mathcal{r}$", 
-                "SVC_linear": "$\mathcal{s}$", "SVC_rbf": "$\mathcal{T}$" }
+                "SVC_linear": "$\mathcal{s}$", "SVC_rbf": "$\mathcal{T}$", "SVC_linear_kernel": "$\u21de$"}
 
     dim_reduc_function_dict = {"PCA": PCA, "UMAP": UMAP}
     cluster_alg_function_dict = {"DBSCAN":DBSCAN, "AgglomerativeClustering":AgglomerativeClustering, "MeanShift":MeanShift}
