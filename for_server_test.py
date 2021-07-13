@@ -155,16 +155,28 @@ def main():
     dim_reduc_function_dict = {"PCA": PCA, "UMAP": UMAP}
     cluster_alg_function_dict = {"DBSCAN":DBSCAN, "AgglomerativeClustering":AgglomerativeClustering, "MeanShift":MeanShift}
     num_repeats = 3
-    list_of_clf=[KNN1]*num_repeats + [KNN3]*num_repeats + [KNN11]*num_repeats + [randomForest1]*num_repeats \
-                +[randomForest5]*num_repeats +[randomForest10]*num_repeats +[randomForest25]*num_repeats #\
+    list_of_clf=[SVC_linear_kernel]*num_repeats + [SVC_linear]*num_repeats + [SVC_rbf]*num_repeats
+        # randomForest100]*num_repeats + [naiveBayesClassifier]*num_repeats + [adaboostClassifier]*num_repeats \
+        #         + [gradientBoostingClassifier]*num_repeats  + [decisionTreeClassifier]*num_repeats 
+    # [KNN1]*num_repeats + [KNN3]*num_repeats + [KNN11]*num_repeats + [randomForest1]*num_repeats \
+    #             +[randomForest5]*num_repeats +[randomForest10]*num_repeats +[randomForest25]*num_repeats #\
                 # +[randomForest100]*num_repeats + [naiveBayesClassifier]*num_repeats + [adaboostClassifier]*num_repeats \
                 # + [gradientBoostingClassifier]*num_repeats  + [decisionTreeClassifier]*num_repeats \
                 # + [quadraticDiscriminantAnalysis]*num_repeats +[logisticRegression] * num_repeats + [SGDClassifier_hinge]*num_repeats \
                 # + [SGDClassifier_log]*num_repeats + [MLPclf_1] * num_repeats + [MLPclf_3] * num_repeats \
                 # + [SVC_linear_kernel]*num_repeats + [SVC_linear]*num_repeats + [SVC_rbf]*num_repeats
-    clf_names = ['KNN1']*num_repeats + ['KNN3']*num_repeats + ['KNN11']*num_repeats + ['randomForest1']*num_repeats \
-                +['randomForest5']*num_repeats +['randomForest10']*num_repeats +['randomForest25']*num_repeats #\
-                # +['randomForest100']*num_repeats + ['naiveBayesClassifier']*num_repeats + ['adaboostClassifier']*num_repeats \
+
+                #KNN1, 3, 11, and RF 1, 5, 10 RF25
+                #100, Naive, Adaboost, gradient, decision
+                #qda, log, SGD
+                #mlp
+                #svc
+    clf_names = ['SVC_linear_kernel']*num_repeats + ['SVC_linear']*num_repeats + ['SVC_rbf']*num_repeats
+    # ['randomForest100']*num_repeats + ['naiveBayesClassifier']*num_repeats + ['adaboostClassifier']*num_repeats \
+    #              + ['gradientBoostingClassifier']*num_repeats  + ['decisionTreeClassifier']*num_repeats
+    # ['KNN1']*num_repeats + ['KNN3']*num_repeats + ['KNN11']*num_repeats + ['randomForest1']*num_repeats \
+    #             +['randomForest5']*num_repeats +['randomForest10']*num_repeats +['randomForest25']*num_repeats# \
+                # ['randomForest100']*num_repeats + ['naiveBayesClassifier']*num_repeats + ['adaboostClassifier']*num_repeats #\
                 # + ['gradientBoostingClassifier']*num_repeats  + ['decisionTreeClassifier']*num_repeats \
                 # + ['quadraticDiscriminantAnalysis']*num_repeats +['logisticRegression'] * num_repeats + ['SGDClassifier_hinge']*num_repeats \
                 # + ['SGDClassifier_log']*num_repeats  + ['MLPclf_1'] * num_repeats + ['MLPclf_3'] * num_repeats \
