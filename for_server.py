@@ -63,7 +63,7 @@ MLPclf_1 = MLPClassifier(max_iter=2000)
 MLPclf_3 = MLPClassifier(hidden_layer_sizes=(150,100,50), max_iter=2000)
 
 from server_ldm_inductive import *
-import server_setup as setup
+import server_setup2 as setup
 
 
 def get_LDM_PD(list_of_clf, X_train, X_test, y_train, classes=[0,1], num_datasets=5, num_repeat=1, proportion_of_dataset=0.1, sparse=True, data_generation=random_uniform):
@@ -101,7 +101,7 @@ def convert_str(n):
     else:
         return int(n)
 
-def generate_plots(pD_vectors,clf_names, list_of_clf, paths, base, markers, dim_reduc_function_dict, cluster_alg_function_dict):
+def generate_plots(pD_vectors,clf_names, list_of_clf, dataset_name, paths, base, markers, dim_reduc_function_dict, cluster_alg_function_dict):
     for path in paths:
         dim_reduc = path.split("|")[0]
         dim_reduc = dim_reduc.split("-")
@@ -119,7 +119,7 @@ def generate_plots(pD_vectors,clf_names, list_of_clf, paths, base, markers, dim_
         visualDim = 2
         reduceDim = True
         dim_reduc_parameters = {**{"n_components":2} , **dim_reduc_parameters}
-        setup.cluster_plot(list_of_PD, clf_names, os.path.join(base, path).replace("|", "-") , markers, labels, visualDim, reduceDim, dim_reduc_function_dict[dim_reduc_function], dim_reduc_parameters)
+        setup.cluster_plot(list_of_PD, clf_names, dataset_name, os.path.join(base, path).replace("|", "-") , markers, labels, visualDim, reduceDim, dim_reduc_function_dict[dim_reduc_function], dim_reduc_parameters)
         setup.analyzeResults(os.path.join(base, path).replace("|", "-"), labels, clf_names) #might need to save this to some sort of doc
 
 
@@ -134,7 +134,7 @@ def main():
     os.mkdir(run_path)
     cluster_path = os.path.join(run_path, "clusters")
     os.mkdir(cluster_path)
-    dataset = pd.read_csv("letters_cleaned.csv", header = None)
+    dataset = pd.read_csv("bank_cleaned.csv", header = None)
     values = dataset.values
     X, y = values[:, :-1], values[:, -1]
 
@@ -149,7 +149,7 @@ def main():
                 'adaboostClassifier': "$\\P$",'gradientBoostingClassifier': "$\u03c0$", 'decisionTreeClassifier': "$\Omega$", 
                 'quadraticDiscriminantAnalysis': "$\\mathrm{\\mathbb{A}}$", 'logisticRegression': "$\u2B22$", 
                 'SGDClassifier_hinge': "$\u2716$", 'SGDClassifier_log': "$\u271A$", 'MLPclf_1': "$\u25b2$", 'MLPclf_3': "$\mathcal{r}$", 
-                "SVC_linear": "$\mathcal{s}$", "SVC_rbf": "$\mathcal{T}$", "SVC_linear_kernel": "$\u21de$"}
+                "SVC_linear": "$\mathcal{s}$", "SVC_rbf": "$\mathcal{T}$" }
 
     dim_reduc_function_dict = {"PCA": PCA, "UMAP": UMAP}
     cluster_alg_function_dict = {"DBSCAN":DBSCAN, "AgglomerativeClustering":AgglomerativeClustering, "MeanShift":MeanShift}
@@ -171,7 +171,7 @@ def main():
     
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=5, random_state=42)
-    LDM_l, PD_l = get_LDM_PD(list_of_clf, X_train, X_test, y_train, num_datasets=305, num_repeat=20, proportion_of_dataset=0.16)
+    LDM_l, PD_l = get_LDM_PD(list_of_clf, X_train, X_test, y_train, num_datasets=800, num_repeat=20, proportion_of_dataset=0.045)
     
     with open(os.path.join(run_path, 'ldm.txt'), 'w') as f:
         csvwriter = csv.writer(f)
@@ -184,12 +184,12 @@ def main():
     setup.plotPairwiseDist_max(PD_l, clf_names, os.path.join(run_path, 'pairwise_max'))
     setup.plotPairwiseDist(PD_l, clf_names, os.path.join(run_path, 'pairwise'))
 
-    dim_reduc_l = ["PCA", "UMAP-n_neighbors=20", "UMAP-n_neighbors=15", "UMAP-n_neighbors=10", "UMAP-n_neighbors=5"]
-    cluster_alg_l = ["DBSCAN-eps=0.35-min_samples=3", "DBSCAN-eps=0.25-min_samples=3", "DBSCAN-eps=0.5-min_samples=3", 
-                    "DBSCAN-eps=0.10-min_samples=3", "AgglomerativeClustering-n_clusters=2", 
-                    "AgglomerativeClustering-n_clusters=4", "AgglomerativeClustering-n_clusters=8","MeanShift"]
-    paths = generate_paths(dim_reduc_l, cluster_alg_l)
-    generate_plots(PD_l,clf_names, list_of_clf, paths, cluster_path, markers, dim_reduc_function_dict, cluster_alg_function_dict)
+#    dim_reduc_l = ["PCA", "UMAP-n_neighbors=20", "UMAP-n_neighbors=15", "UMAP-n_neighbors=10", "UMAP-n_neighbors=5"]
+#    cluster_alg_l = ["DBSCAN-eps=0.35-min_samples=3", "DBSCAN-eps=0.25-min_samples=3", "DBSCAN-eps=0.5-min_samples=3", 
+#                    "DBSCAN-eps=0.10-min_samples=3", "AgglomerativeClustering-n_clusters=2", 
+#                    "AgglomerativeClustering-n_clusters=4", "AgglomerativeClustering-n_clusters=8","MeanShift"]
+#    paths = generate_paths(dim_reduc_l, cluster_alg_l)
+#    generate_plots(PD_l,clf_names, list_of_clf, paths, cluster_path, markers, dim_reduc_function_dict, cluster_alg_function_dict)
 
 
 if __name__ == "__main__":
