@@ -8,6 +8,12 @@ dataset = dataset.sample(frac=0.75)
 values = dataset.values
 X, y = values[:, :-1], values[:, -1]
 
+##random dataset
+# X = np.random.randn(1609, 16)
+# y = np.random.choice([0, 1], size=(1609,))
+# d = np.insert(X, 16, y, axis=1)
+# dataset = pd.DataFrame(d)
+
 
 def convert_to_np(dataset):
     values = dataset.values
@@ -41,7 +47,7 @@ dataset0 = dataset.loc[y == 0]
 dataset1 = dataset.loc[y == 1]
 
 
-avg_dist_same = (get_avg_dist(dataset0) + get_avg_dist(dataset1))/2
+avg_dist_same = (get_avg_dist(dataset0)*len(dataset0) + get_avg_dist(dataset1)*len(dataset1))/(len(dataset0)+len(dataset1))
 print("distance to same class label ", avg_dist_same)
 
 
@@ -52,3 +58,5 @@ points1 = convert_to_np(dataset1)
 dist_diff = cdist(points0, points1)
 avg_diff_dist = get_min_dist(dist_diff, same=False)
 print("distance to different class label ", avg_diff_dist)
+
+print("ratio same/other: ", avg_dist_same/avg_diff_dist)
