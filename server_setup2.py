@@ -9,10 +9,10 @@ import seaborn as sns
 import itertools
 import math
 
-
-# dataset = pd.read_csv("EEG_Eye_State.csv", header = None)
-# values = dataset.values
-# X, y = values[:, :-1], values[:, -1]
+'''set dataset'''
+dataset = pd.read_csv("Datasets/EEG_Eye_State.csv", header = None)
+values = dataset.values
+X, y = values[:, :-1], values[:, -1]
 
 classes=[0,1]
 num_datasets=205

@@ -1,6 +1,4 @@
-import itertools
-import random
-import math
+
 import numpy as np
 from scipy.sparse import data
 from scipy.stats import entropy
@@ -13,9 +11,7 @@ from statistics import mean
 import os
 import time
 
-import itertools
-import random
-import math
+
 import numpy as np
 import pandas as pd
 import csv
@@ -138,11 +134,7 @@ def main():
     values = dataset.values
     X, y = values[:, :-1], values[:, -1]
 
-    # markers = {'KNN1': "$a$", 'KNN3': "$b$", 'KNN11': "$c$", 'randomForest1': "$d$", 'randomForest5': "$e$", 
-    #         'randomForest10': "$f$", 'randomForest25': "$g$",'randomForest100': "$h$",'naiveBayesClassifier': "$i$",
-    #         'adaboostClassifier': "$j$",'gradientBoostingClassifier': "$k$", 'decisionTreeClassifier': "$l$", 
-    #         'quadraticDiscriminantAnalysis': "$m$", 'logisticRegression': "$n$", 'SGDClassifier_hinge': "$o$", 
-    #         'SGDClassifier_log': "$p$", 'MLPclf_1': "$q$", 'MLPclf_3': "$r$", "SVC_linear": "$s$", "SVC_rbf": "$t$" }
+
     markers = {'KNN1': "$\\bullet$", 'KNN3': "$\\sigma$", 'KNN11': "$\\blacksquare$", 'randomForest1': "$\u2605$", 
                 'randomForest5': "$\u25C6$", 'randomForest10': "$\\spadesuit$", 'randomForest25': "$\\blacktriangleleft$",
                 'randomForest100': "$\\blacktriangleright$",'naiveBayesClassifier': "$\\blacktriangledown$",
