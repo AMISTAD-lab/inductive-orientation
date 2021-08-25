@@ -10,7 +10,7 @@ import itertools
 import math
 
 '''set dataset'''
-dataset = pd.read_csv("Datasets/EEG_Eye_State.csv", header = None)
+dataset = pd.read_csv("datasets/EEG_Eye_State.csv", header = None)
 values = dataset.values
 X, y = values[:, :-1], values[:, -1]
 
