@@ -17,8 +17,8 @@ class Data_Generator:
   def generate_subset(self, num_entries, do_replace=False):
     indices = np.array(len(self.dataset_x))
     indices = self.rng.choice(indices, num_entries, do_replace)
-    random_subset_X = [self.dataset_x[i] for i in indices]
-    random_subset_y = [self.dataset_y[i] for i in indices]
+    random_subset_X = np.array([self.dataset_x[i] for i in indices])
+    random_subset_y = np.array([self.dataset_y[i] for i in indices])
     return random_subset_X, random_subset_y
 
   def first_n_elements(self, num_entries):
