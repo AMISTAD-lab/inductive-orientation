@@ -11,13 +11,15 @@ class Inductive_Generator:
     self.times_trained = 0
     self.X_train = X_train
     self.y_train = y_train
-    self.data_generator = Data_Generator(self.X_train, self.y_train, 42)
+    self.data_generator = Data_Generator.Data_Generator(self.X_train, self.y_train, 42)
 
   def train(self, subset_X, subset_y):
+    print(subset_X)
+    print(type(subset_X))
     self.clf.fit(subset_X, subset_y)
     self.times_trained += 1
   
-  def b2d(binary_list):
+  def b2d(self,binary_list):
     decimal_result = reduce(lambda a,b: 2*a+b, binary_list)
     return decimal_result
 
@@ -33,13 +35,20 @@ class Inductive_Generator:
     elif self.mode == "simple good turing":
       raise Exception("Sorry, only sparse mode is implemented")
   
-  def get_LDM(self, X_test, num_datasets, num_repeat, proportion_of_dataset, data_generation, do_replace=False):
+  def get_LDM(self, X_test, num_datasets, num_repeat, proportion_of_dataset, data_generation_method, do_replace=False):
+    # if data_generation_method == "generate_subset":
+    #   method = self.data_generator.generate_subset
+    # else:
+    #   raise Exception("Only generate_subset has been implemented")
+
     if self.mode == "sparse":
       self.PD_length = len(self.classes)**len(X_test)
-      num_entries = int(proportion_of_dataset) * len(self.X_train)
+      num_entries = int(proportion_of_dataset * len(self.X_train))
+      print(num_entries)
 
       def generateLDMHelper():
-        subset_X, subset_y = self.data_generator.data_generation(num_entries, do_replace=do_replace)
+        subset_X, subset_y = self.data_generator.generate_subset(num_entries, do_replace=do_replace)
+        print(subset_X)
         def generatePf():
           self.train(subset_X, subset_y)
           Pf = self.get_simplex(X_test)
