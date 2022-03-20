@@ -1,7 +1,7 @@
 import Inductive_Generator
 from sklearn import datasets, model_selection
 from sklearn.neighbors import KNeighborsClassifier
-
+import json
 
 iris = datasets.load_iris()
 X = iris.data
@@ -15,7 +15,9 @@ KNN10_generator = Inductive_Generator.Inductive_Generator("sparse", KNN10, [0,1,
 # testing save_state
 KNN10_generator.get_LDM(X_test, 10, 3, 0.3, "generate_subset")
 KNN10_generator.compute_PD()
-KNN10_generator.save_state("./test/trial1.json", "iris")
+KNN10_generator.save_state("./test/trial2.json", "KNN10", "iris")
+with open("./test/trial2.json") as logs:
+  saved_state = json.loads(logs.read(), cls=Inductive_Generator.Inductive_Generator_Decoder)
 
 list_of_10_PD = []
 for i in range(10):

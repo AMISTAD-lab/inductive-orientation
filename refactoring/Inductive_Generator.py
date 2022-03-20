@@ -80,20 +80,36 @@ class Inductive_Generator:
     elif self.mode == "simple good turing":
       raise Exception("Sorry, only sparse mode is implemented")
   
-  def save_state(self, file, dataset):
-    self.dataset = dataset
+  def save_state(self, file, model_name, dataset_name):
+    """
+    Saves the model, dataset, LDM, and PD vectors of the current Inductive_Generator Object.
+    """
+    self.model_name = model_name
+    self.dataset_name = dataset_name
+    State = {"model": self.model_name, "dataset": self.dataset_name, "LDM":self.LDM, "PD": self.PD}
     with open(file, "a") as logs:
-      json.dump(self, fp=logs, cls=Inductive_Generator_Encoder)
-
-    # with open(file, "a") as logs:
-    #   print(f"model: {self.clf}", file=logs)
-    #   print(f"dataset: {self.dataset}; classes: {self.classes}", file = logs)
-    #   print(f"LDM:\n{self.LDM}", file = logs)
-    #   print(f"PD:\n{self.PD}", file = logs)
+      json.dump(State, fp=logs, cls=Inductive_Generator_Encoder)
 
 class Inductive_Generator_Encoder(json.JSONEncoder):
+  """
+  Neccessary for serializing numpy arrays.
+  """
   def default(self, obj):
-      if isinstance(obj, np.ndarray):
-          return obj.tolist()
-      else:
-        return obj.__dict__
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    else:
+      return obj.__dict__
+
+class Inductive_Generator_Decoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+
+    def object_hook(self, obj):
+      print(obj)
+      obj["LDM"] = np.asarray(obj["LDM"])
+      obj["PD"] = np.asarray(obj["PD"])
+      return obj
