@@ -1,6 +1,7 @@
 from functools import reduce 
 import Data_Generator as Data_Generator
 import numpy as np
+import json
 class Inductive_Generator:
   def __init__(self, mode, clf, classes, X_train, y_train):
     if mode not in ["sparse", "predict proba", "simple good turing"]:
@@ -14,8 +15,6 @@ class Inductive_Generator:
     self.data_generator = Data_Generator.Data_Generator(self.X_train, self.y_train, 42)
 
   def train(self, subset_X, subset_y):
-    print(subset_X)
-    print(type(subset_X))
     self.clf.fit(subset_X, subset_y)
     self.times_trained += 1
   
@@ -36,19 +35,17 @@ class Inductive_Generator:
       raise Exception("Sorry, only sparse mode is implemented")
   
   def get_LDM(self, X_test, num_datasets, num_repeat, proportion_of_dataset, data_generation_method, do_replace=False):
-    # if data_generation_method == "generate_subset":
-    #   method = self.data_generator.generate_subset
-    # else:
-    #   raise Exception("Only generate_subset has been implemented")
+    if data_generation_method == "generate_subset":
+      method = self.data_generator.generate_subset
+    else:
+      raise Exception("Only generate_subset has been implemented")
 
     if self.mode == "sparse":
       self.PD_length = len(self.classes)**len(X_test)
       num_entries = int(proportion_of_dataset * len(self.X_train))
-      print(num_entries)
 
       def generateLDMHelper():
-        subset_X, subset_y = self.data_generator.generate_subset(num_entries, do_replace=do_replace)
-        print(subset_X)
+        subset_X, subset_y = method(num_entries, do_replace=do_replace)
         def generatePf():
           self.train(subset_X, subset_y)
           Pf = self.get_simplex(X_test)
@@ -82,3 +79,21 @@ class Inductive_Generator:
     
     elif self.mode == "simple good turing":
       raise Exception("Sorry, only sparse mode is implemented")
+  
+  def save_state(self, file, dataset):
+    self.dataset = dataset
+    with open(file, "a") as logs:
+      json.dump(self, fp=logs, cls=Inductive_Generator_Encoder)
+
+    # with open(file, "a") as logs:
+    #   print(f"model: {self.clf}", file=logs)
+    #   print(f"dataset: {self.dataset}; classes: {self.classes}", file = logs)
+    #   print(f"LDM:\n{self.LDM}", file = logs)
+    #   print(f"PD:\n{self.PD}", file = logs)
+
+class Inductive_Generator_Encoder(json.JSONEncoder):
+  def default(self, obj):
+      if isinstance(obj, np.ndarray):
+          return obj.tolist()
+      else:
+        return obj.__dict__
