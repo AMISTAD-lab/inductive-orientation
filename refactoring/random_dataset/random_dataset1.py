@@ -12,8 +12,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC, LinearSVC
 from sklearn.gaussian_process import GaussianProcessClassifier
 
+from time import time
+
 # Decision Tree up to 21
-decisionTreeClassifier17 = DecisionTreeClassifier(max_depth= 3)
+decisionTreeClassifier3 = DecisionTreeClassifier(max_depth= 3)
 
 # k-Nearest Neighbors up to 21
 KNN17 = KNeighborsClassifier(n_neighbors=3)
@@ -40,26 +42,41 @@ linearSVC = LinearSVC()
 logisticRegression = LogisticRegression()
 
 # Getting Data
-X, y = generate_fully_synethic(2000, 4, 100)
+X, y = generate_fully_synethic(2000, 4, 100, 2)
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = 5)
 
 # Generating inductive orientation vectors
-decisionTreeClassifier17_generator = Inductive_Generator.Inductive_Generator("sparse", decisionTreeClassifier17, [0,1], X_train, y_train)
-decisionTreeClassifier17_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-decisionTreeClassifier17_generator.compute_PD()
-decisionTreeClassifier17_generator.save_state("./logs/trial1_DecisionTree17")
 
-KNN17_generator = Inductive_Generator.Inductive_Generator("sparse", KNN17, [0,1], X_train, y_train)
-KNN17_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-KNN17_generator.compute_PD()
-KNN17_generator.save_state("./logs/trial1_KNN17")
+def decisionTreeSetup():
 
-naiveBayesClassifier_generator = Inductive_Generator.Inductive_Generator("sparse", naiveBayesClassifier, [0,1], X_train, y_train)
-naiveBayesClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-naiveBayesClassifier_generator.compute_PD()
-naiveBayesClassifier_generator.save_state("./logs/trial1_naiveBayes")
+    start = time()
 
-linearSVC_generator = Inductive_Generator.Inductive_Generator("sparse", linearSVC, [0,1], X_train, y_train)
-linearSVC_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-linearSVC_generator.compute_PD()
-linearSVC_generator.save_state("./logs/trial1_linearSVC")
+    for i in range(1,22):
+        trial_start = time()
+        decisionTreeClassifier = DecisionTreeClassifier(max_depth= i)
+        decisionTreeClassifier_generator = Inductive_Generator.Inductive_Generator("sparse",decisionTreeClassifier, [0,1], X_train, y_train)
+        decisionTreeClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
+        decisionTreeClassifier_generator.compute_PD()
+        decisionTreeClassifier_generator.save_state(f"./logs/trial2_DecisionTree{i}")
+        trial_end = time()
+        print(f"Decision Tree with Depth {i} finished. Time elapsed: {(trial_end - trial_start)/60}.")
+
+    end = time()
+    print(f"All Decision Trees finished. Time elapsed: {(end - start)/60}.")
+
+decisionTreeSetup()
+
+# KNN17_generator = Inductive_Generator.Inductive_Generator("sparse", KNN17, [0,1], X_train, y_train)
+# KNN17_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
+# KNN17_generator.compute_PD()
+# KNN17_generator.save_state("./logs/trial1_KNN17")
+
+# naiveBayesClassifier_generator = Inductive_Generator.Inductive_Generator("sparse", naiveBayesClassifier, [0,1], X_train, y_train)
+# naiveBayesClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
+# naiveBayesClassifier_generator.compute_PD()
+# naiveBayesClassifier_generator.save_state("./logs/trial1_naiveBayes")
+
+# linearSVC_generator = Inductive_Generator.Inductive_Generator("sparse", linearSVC, [0,1], X_train, y_train)
+# linearSVC_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
+# linearSVC_generator.compute_PD()
+# linearSVC_generator.save_state("./logs/trial1_linearSVC")
