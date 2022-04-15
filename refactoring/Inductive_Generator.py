@@ -3,7 +3,7 @@ import Data_Generator as Data_Generator
 import numpy as np
 import json
 class Inductive_Generator:
-  def __init__(self, mode, clf, classes, X_train, y_train):
+  def __init__(self, mode, clf, classes, X_train, y_train, X_fixed = None, y_fixed=None):
     if mode not in ["sparse", "predict proba", "simple good turing"]:
       raise Exception("Mode is not one of sparse, predict proba, or simple good turing.")
     self.mode = mode
@@ -12,7 +12,9 @@ class Inductive_Generator:
     self.times_trained = 0
     self.X_train = X_train
     self.y_train = y_train
-    self.data_generator = Data_Generator.Data_Generator(self.X_train, self.y_train, 42)
+    self.X_fixed = X_fixed
+    self.y_fixed = y_fixed
+    self.data_generator = Data_Generator.Data_Generator(self.X_train, self.y_train, 42, self.X_fixed, self.y_fixed)
 
   def train(self, subset_X, subset_y):
     self.clf.fit(subset_X, subset_y)
@@ -37,8 +39,10 @@ class Inductive_Generator:
   def get_LDM(self, X_test, num_datasets, num_repeat, proportion_of_dataset, data_generation_method, do_replace=False):
     if data_generation_method == "generate_subset":
       method = self.data_generator.generate_subset
+    elif data_generation_method == "generate_subset_plus_fixed":
+      method = self.data_generator.generate_subset_plus_fixed
     else:
-      raise Exception("Only generate_subset has been implemented")
+      raise Exception("Only generate_subset and generate_subset_plus_fixed have been implemented")
 
     if self.mode == "sparse":
       self.PD_length = len(self.classes)**len(X_test)
