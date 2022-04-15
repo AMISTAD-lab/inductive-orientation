@@ -43,7 +43,7 @@ logisticRegression = LogisticRegression()
 
 # Getting Data
 X, y = generate_fully_synethic(4, 2000, 100, 2)
-X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = 5)
+X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = 5, random_state=42)
 
 # Generating inductive orientation vectors
 
@@ -173,8 +173,8 @@ def logisticRegressionSetup():
 # gaussianProcessSetup()
 # naiveBayesClassifierSetup()
 # linearSVCSetup()
+# logisticRegressionSetup()
 # randomForestSetup()
-randomForestSetup()
 
 # KNN17_generator = Inductive_Generator.Inductive_Generator("sparse", KNN17, [0,1], X_train, y_train)
 # KNN17_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
