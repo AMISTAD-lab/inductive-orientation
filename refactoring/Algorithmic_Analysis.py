@@ -1,6 +1,9 @@
 import itertools
 import numpy as np
 from scipy.stats import entropy
+import json
+import Inductive_Generator
+import os
 
 # analysis
 """
@@ -18,9 +21,9 @@ def getTarget(X_test, y_test, min_num_accurate, classes=[0,1]):
     num_holdout_samples = len(X_test)
     all_labels = np.array(list(itertools.product(classes, repeat=num_holdout_samples)))
     testForCorrectLabels = all_labels == y_test
-    print("all_labels: ", all_labels)
-    print("y_test: ", y_test)
-    print("testForCorrectLabels: ", testForCorrectLabels)
+    # print("all_labels: ", all_labels)
+    # print("y_test: ", y_test)
+    # print("testForCorrectLabels: ", testForCorrectLabels)
     countNumCorrect = np.sum(testForCorrectLabels, axis = 1)
     target = 1 * (countNumCorrect >= min_num_accurate)
     return target
@@ -46,19 +49,27 @@ def computeAlgorithmicBias(target, pD_vector):
   return algorithmicBias
 
 '''
-computeEntropy finds the entropies for each sublist (pf, probability distribution simplex vector) of the LDM
+computeEntropy finds the Entropic Expresstivity for a PD vector
+input:
+    PD: an inductive orientation vector
+return:
+    The Entropic Expresstivity for a PD vector
+'''
+def computeEntropy(PD):
+    return entropy(PD, base=2)
+
+'''
+computeEntropyLDM finds the entropies for each sublist (pf, probability distribution simplex vector) of the LDM
 input:
     LDM: an LDM matrix
 return:
     entropy_list: a list of doubles that are the entropy values for the corresponding pf
 '''
-def computeEntropy(LDM):
-    entropy_list = []
-    for i in range(len(LDM)):
-        current_entropy = entropy(LDM[i])
-        entropy_list.append(current_entropy)
-    return entropy_list
-
+def computeEntropyLDM(LDM):
+    def toDistribution(x):
+        _, counts = np.unique(x, return_counts=True)
+        return counts / sum(counts)
+    return np.array([computeEntropy(toDistribution(x)) for x in LDM])
 
 '''
 Algorithmic Capacity = Entropy of PD vector - Expected value of (Entropy of each individual PF vector)
@@ -66,22 +77,21 @@ Parameters:
     1. ldm = list of Pf vectors
     2. pD_vector = PD vector calculated from ldm
 '''
-def calculateAlgorithmicCapacity(ldm, pD_vector):
+def computeAlgorithmicCapacity(ldm, pD_vector):
 
-    #entropy_of_Pfs = list containing the entropy of each individual Pf vector in ldm
-    entropy_of_Pfs = np.array(computeEntropy(ldm))
-    #print("Entropy of Pfs: ",  entropy_of_Pfs)
-    #print("Entropy Calculated: ", [entropy(l) for l in ldm])
+    #entropy_of_Pfs is a list containing the entropy of each individual Pf vector in ldm
+    entropy_of_Pfs = np.array(computeEntropyLDM(ldm))
+    print("entropy_of_Pfs: ", entropy_of_Pfs)
 
     #expected value/average of the entropies of each Pf vector
     expected_entropy_of_Pfs = np.mean(entropy_of_Pfs)
-    #print("Expected = mean of entropy: ", expected_entropy_of_Pfs)
+    print("Expected = mean of entropy: ", expected_entropy_of_Pfs)
 
     #calculate the entropy of a pD_vector
-    entropy_pD = entropy(pD_vector)
-    #print("Entropy of PD: ", entropy_PD)
+    entropy_pD = computeEntropy(pD_vector)
+    print("Entropy of PD: ", entropy_pD)
 
-    return (entropy_pD - expected_entropy_of_Pfs)
+    return entropy_pD - expected_entropy_of_Pfs
 
 '''
 computeVariance finds the variance of a list of probability distribution simplex vectors
@@ -116,6 +126,40 @@ def varianceUpToN(list_of_PD):
         print("Variance after ", i, " runs: ", current_variance)
     return variance_per_run
 
+'''
+singleAnalysis calculates Bias, Entropic Expressivity, and Algorithmic Capacity for a model
+inputs:
+    file: the path to the json file storing the model's LDM and PD
+    target: the target vector to evaluate the model. If not given, then
+            the function will not calculate Bias
+'''
+def singleAnalysis(file, target = None):
+    print("Current file: ", file)
+    with open(file) as logs:
+        saved_state = json.loads(logs.read(), cls = Inductive_Generator.Inductive_Generator_Decoder)
+        if type(target) != type(None):
+            bias = computeAlgorithmicBias(target, saved_state["PD"])
+            print(bias)
+        expressivity = computeEntropy(saved_state["LDM"])
+        print(expressivity)
+        capacity = computeAlgorithmicCapacity(saved_state["LDM"], saved_state["PD"])
+        print(capacity)
+
+'''
+runAnalysis allows multiple calls to singleAnalysis
+inputs:
+    file: the path to either a json file or a directry containing all json files
+    target: the target vector to evaluate the model. If not given, then
+            the function will not calculate Bias
+'''
+def runAnalysis(file, target=None):
+    if file[-4:] == "json":
+        singleAnalysis(file, target)
+    else:
+        logs = os.listdir(file)
+        logs = [os.path.join(file, log) for log in logs]
+        for log_file in logs:
+            singleAnalysis(log_file, target)
 
 # '''
 # variance_propdata finds the variance between columns of an LDM, not PD, as the proportion of dataset changes
