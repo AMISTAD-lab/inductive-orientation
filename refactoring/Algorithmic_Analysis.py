@@ -4,6 +4,7 @@ from scipy.stats import entropy
 import json
 import Inductive_Generator
 import os
+import pandas as pd
 
 # analysis
 """
@@ -135,15 +136,24 @@ inputs:
 '''
 def singleAnalysis(file, target = None):
     print("Current file: ", file)
+    analytics = []
     with open(file) as logs:
         saved_state = json.loads(logs.read(), cls = Inductive_Generator.Inductive_Generator_Decoder)
         if type(target) != type(None):
             bias = computeAlgorithmicBias(target, saved_state["PD"])
             print(bias)
-        expressivity = computeEntropy(saved_state["LDM"])
-        print(expressivity)
+            analytics.append(bias)
+        else:
+            analytics.append(None)
+        # expressivity = computeEntropy(saved_state["LDM"])
+        # print(expressivity)
+        expressivity = computeEntropy(saved_state["PD"])
+        analytics.append(expressivity)
         capacity = computeAlgorithmicCapacity(saved_state["LDM"], saved_state["PD"])
         print(capacity)
+        analytics.append(capacity)
+    return tuple(analytics)
+        
 
 '''
 runAnalysis allows multiple calls to singleAnalysis
@@ -152,14 +162,25 @@ inputs:
     target: the target vector to evaluate the model. If not given, then
             the function will not calculate Bias
 '''
-def runAnalysis(file, target=None):
+
+def runAnalysis(file, target=None, name_column=[], bias_column=[], entropic_expressivity_column = [], algorithmic_capacity_column = []):
+
     if file[-4:] == "json":
-        singleAnalysis(file, target)
+        return singleAnalysis(file, target)
+
     else:
         logs = os.listdir(file)
         logs = [os.path.join(file, log) for log in logs]
         for log_file in logs:
-            singleAnalysis(log_file, target)
+            bias, entropic_expressivity, algorithmic_capacity = singleAnalysis(log_file, target)
+            name_column.append(log_file.split("/")[-1].split(".")[0])
+            bias_column.append(bias)
+            entropic_expressivity_column.append(entropic_expressivity)
+            algorithmic_capacity_column.append(algorithmic_capacity)
+        summary = pd.DataFrame({"model_name":name_column, "algorithmic_bias" : bias_column, \
+            "entropic_expressivity" :entropic_expressivity_column, "algorithmic_capacity" : algorithmic_capacity_column})
+        summary = summary.sort_values(by= "model_name")
+        return summary
 
 # '''
 # variance_propdata finds the variance between columns of an LDM, not PD, as the proportion of dataset changes
