@@ -1,3 +1,8 @@
 *.json
 *.csv
 *.png
+*.vscode
+__pycache__
+datasets
+logs
+*.sh

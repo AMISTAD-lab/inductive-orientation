@@ -1,3 +1,4 @@
+from random import random
 import numpy as np
 class Data_Generator:
   def __init__(self, dataset_x, dataset_y, seed, fixed_dataset_x=None, fixed_dataset_y=None):

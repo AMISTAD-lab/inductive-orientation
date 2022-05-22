@@ -18,27 +18,27 @@ target7 = Algorithmic_Analysis.getTarget(X_test, y_test, 7, [0,1])
 target6 = Algorithmic_Analysis.getTarget(X_test, y_test, 6, [0,1])
 
 
-summary_9 = Algorithmic_Analysis.runAnalysis("./trial5", target=target9)
-summary_9.sort_values(by=['model_name'])
-summary_9.to_csv("trial5_target9.csv")
+# summary_9 = Algorithmic_Analysis.runAnalysis("./trial6", target=target9)
+# summary_9.sort_values(by=['model_name'])
+# summary_9.to_csv("trial6_target9.csv")
 
 
-summary_8 = Algorithmic_Analysis.runAnalysis("./trial5", target=target8)
-summary_8.sort_values(by=['model_name'])
-summary_8.to_csv("trial5_target8.csv")
+# summary_8 = Algorithmic_Analysis.runAnalysis("./trial6", target=target8)
+# summary_8.sort_values(by=['model_name'])
+# summary_8.to_csv("trial6_target8.csv")
 
-summary_7 = Algorithmic_Analysis.runAnalysis("./trial5", target=target7)
-summary_7.sort_values(by=['model_name'])
-summary_7.to_csv("trial5_target7.csv")
+# summary_7 = Algorithmic_Analysis.runAnalysis("./trial6", target=target7)
+# summary_7.sort_values(by=['model_name'])
+# summary_7.to_csv("trial6_target7.csv")
 
 
-summary_6 = Algorithmic_Analysis.runAnalysis("./trial5", target=target6)
+summary_6 = Algorithmic_Analysis.runAnalysis("./trial6", target=target6)
 summary_6.sort_values(by=['model_name'])
-summary_6.to_csv("trial5_target6.csv")
+summary_6.to_csv("trial6_target6.csv")
 
-# summary_3 = Algorithmic_Analysis.runAnalysis("./trial5", target=target3)
+# summary_3 = Algorithmic_Analysis.runAnalysis("./trial6", target=target3)
 # summary_3.sort_values(by=['model_name'])
-# summary_3.to_csv("trial5_target3.csv")
+# summary_3.to_csv("trial6_target3.csv")
 
 
 
