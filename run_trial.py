@@ -49,15 +49,15 @@ X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_s
 
 # Generating inductive orientation vectors
 
-def decisionTreeSetup():
-
+def decisionTreeSetup(max_branches):
     start = time()
 
-    for i in range(1,22):
+    for i in range(1,max_branches):
+        print(f"Starting Decision Tree with Depth {i}...")
         trial_start = time()
         decisionTreeClassifier = DecisionTreeClassifier(max_depth= i)
         decisionTreeClassifier_generator = Inductive_Generator.Inductive_Generator("sparse",decisionTreeClassifier, [0,1], X_train, y_train, X_test, y_test)
-        decisionTreeClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset_plus_fixed")
+        decisionTreeClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
         decisionTreeClassifier_generator.compute_PD()
         decisionTreeClassifier_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_DecisionTree{i}.json", f"DecisionTree{i}", dataset_name)
         trial_end = time()
@@ -67,15 +67,16 @@ def decisionTreeSetup():
     print(f"All Decision Trees finished. Time elapsed: {(end - start)/60}.")
 
 
-def kNNSetup():
+def kNNSetup(max_neighbors):
 
     start = time()
 
-    for i in range(1,22):
+    for i in range(1,max_neighbors):
+        print(f"Starting KNN with {i} Neighbors...")
         trial_start = time()
         kNeighborsClassifier = KNeighborsClassifier(n_neighbors=i)
         kNeighborsClassifier_generator = Inductive_Generator.Inductive_Generator("sparse",kNeighborsClassifier, [0,1], X_train, y_train, X_test, y_test)
-        kNeighborsClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset_plus_fixed")
+        kNeighborsClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
         kNeighborsClassifier_generator.compute_PD()
         kNeighborsClassifier_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_KNN{i}.json", f"KNN{i}", dataset_name)
         trial_end = time()
@@ -84,17 +85,36 @@ def kNNSetup():
     end = time()
     print(f"All KNNs finished. Time elapsed: {(end - start)/60}.")
 
-def randomForestSetup():
+def randomForestSetup(max_estimators):
 
     start = time()
 
-    for i in range(1,22):
+    for i in range(1,max_estimators):
+        print(f"Starting Random Forest with {i} estimators...")
         trial_start = time()
         randomForest = RandomForestClassifier(n_estimators=i)
         randomForest_generator = Inductive_Generator.Inductive_Generator("sparse",randomForest, [0,1], X_train, y_train, X_test, y_test)
-        randomForest_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset_plus_fixed")
+        randomForest_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
         randomForest_generator.compute_PD()
         randomForest_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_RandomForest{i}.json", f"RandomForest{i}", dataset_name)
+        trial_end = time()
+        print(f"Random Forest with {i} estimators finished. Time elapsed: {(trial_end - trial_start)/60}.")
+
+    end = time()
+    print(f"All Random Forests finished. Time elapsed: {(end - start)/60}.")
+
+def randomForestSetupDepth(n_estimators, max_depth):
+
+    start = time()
+
+    for i in range(1,max_depth):
+        print(f"Starting Random Forest with {i} estimators...")
+        trial_start = time()
+        randomForest = RandomForestClassifier(n_estimators=n_estimators, max_depth=i)
+        randomForest_generator = Inductive_Generator.Inductive_Generator("sparse",randomForest, [0,1], X_train, y_train, X_test, y_test)
+        randomForest_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
+        randomForest_generator.compute_PD()
+        randomForest_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_RandomForest{n_estimators}EstDepth{i}.json", f"RandomForest{i}", dataset_name)
         trial_end = time()
         print(f"Random Forest with {i} estimators finished. Time elapsed: {(trial_end - trial_start)/60}.")
 
@@ -104,9 +124,10 @@ def randomForestSetup():
 def adaboostSetup():
 
     start = time()
+    print(f"Starting Adaboost...")
     adaboostClassifier50 = AdaBoostClassifier()
     adaboostClassifier50_generator = Inductive_Generator.Inductive_Generator("sparse",adaboostClassifier50, [0,1], X_train, y_train, X_test, y_test)
-    adaboostClassifier50_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset_plus_fixed")
+    adaboostClassifier50_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
     adaboostClassifier50_generator.compute_PD()
     adaboostClassifier50_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_Adaboost50.json", f"Adaboost50", dataset_name)
     end = time()
@@ -115,9 +136,10 @@ def adaboostSetup():
 def QDASetup():
 
     start = time()
+    print(f"Starting QDA...")
     quadraticDiscriminantAnalysis = QuadraticDiscriminantAnalysis()
     quadraticDiscriminantAnalysis_generator = Inductive_Generator.Inductive_Generator("sparse",quadraticDiscriminantAnalysis, [0,1], X_train, y_train, X_test, y_test)
-    quadraticDiscriminantAnalysis_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset_plus_fixed")
+    quadraticDiscriminantAnalysis_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
     quadraticDiscriminantAnalysis_generator.compute_PD()
     quadraticDiscriminantAnalysis_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_QuadraticDiscriminantAnalysis.json", f"QuadraticDiscriminantAnalysis", dataset_name)
     end = time()
@@ -126,31 +148,44 @@ def QDASetup():
 def gaussianProcessSetup():
 
     start = time()
+    print(f"Starting GaussianProcessClassifier...")
     gaussianProcessClassifier = GaussianProcessClassifier()
+    print("1")
     gaussianProcessClassifier_generator = Inductive_Generator.Inductive_Generator("sparse",gaussianProcessClassifier, [0,1], X_train, y_train, X_test, y_test)
-    gaussianProcessClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset_plus_fixed")
+    print("2")
+    gaussianProcessClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
+    print("3")
     gaussianProcessClassifier_generator.compute_PD()
+    print("4")
     gaussianProcessClassifier_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_GaussianProcessClassifier.json", f"GaussianProcessClassifier", dataset_name)
+    print("5")
     end = time()
     print(f"All GaussianProcessClassifier finished. Time elapsed: {(end - start)/60}.")
 
 def naiveBayesClassifierSetup():
 
     start = time()
+    print(f"Starting Naive Bayes Classifier...")
     naiveBayesClassifier = GaussianNB()
+    print("1")
     naiveBayesClassifier_generator = Inductive_Generator.Inductive_Generator("sparse",naiveBayesClassifier, [0,1], X_train, y_train, X_test, y_test)
-    naiveBayesClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset_plus_fixed")
+    print("2")
+    naiveBayesClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
+    print("3")
     naiveBayesClassifier_generator.compute_PD()
+    print("4")
     naiveBayesClassifier_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_NaiveBayesClassifier.json", f"NaiveBayesClassifier", dataset_name)
+    print("5")
     end = time()
     print(f"All Naive Bayes Classifier finished. Time elapsed: {(end - start)/60}.")
 
 def linearSVCSetup():
 
     start = time()
+    print(f"Starting Linear SVC...")
     linearSVC = LinearSVC()
     linearSVC_generator = Inductive_Generator.Inductive_Generator("sparse",linearSVC, [0,1], X_train, y_train, X_test, y_test)
-    linearSVC_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset_plus_fixed")
+    linearSVC_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
     linearSVC_generator.compute_PD()
     linearSVC_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_LinearSVC.json", f"LinearSVC", dataset_name)
     end = time()
@@ -159,9 +194,10 @@ def linearSVCSetup():
 def logisticRegressionSetup():
 
     start = time()
+    print(f"Starting Logistic Regression...")
     logisticRegression = LogisticRegression()
     logisticRegression_generator = Inductive_Generator.Inductive_Generator("sparse",logisticRegression, [0,1], X_train, y_train, X_test, y_test)
-    logisticRegression_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset_plus_fixed")
+    logisticRegression_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
     logisticRegression_generator.compute_PD()
     logisticRegression_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_LogisticRegression.json", f"LogisticRegression", dataset_name)
     end = time()
@@ -185,6 +221,8 @@ if __name__ == "__main__":
         dataset = "Bank_Marketing.csv"
     elif sys.argv[1] in "Car_Evaluation":
         dataset = "Car_Evaluation.csv"
+    elif sys.argv[1] in "EEG_Eye_State.csv":
+        dataset = "EEG_Eye_State.csv"
     elif sys.argv[1] in "Letter_Recognition":
         dataset = "Letter_Recognition.csv"
     elif sys.argv[1] in "Obesity":
@@ -195,25 +233,38 @@ if __name__ == "__main__":
         dataset = "Spam.csv"
     elif sys.argv[1] in "Wine_Quality":
         dataset = "Wine_Quality.csv"
+    elif sys.argv[1] in "Semi_Random":
+        dataset = "Semi_Random"
     else:
         sys.exit("We don't have that dataset. All that we have is ", os.listdir("datasets"))
     
-    dataset_name = dataset.split(".")[0]
-    dataset = os.path.join("datasets", dataset)
-    data = pd.read_csv(dataset)
-    X = data[data.columns[:-1]]
-    X = X.iloc[:,:].values
-    y = data[data.columns[-1]]
-    y = y.values
+    if dataset == "Semi_Random":  
+        dataset_name = "SemiRandom"       
+        X, y = generate_fully_synethic(4, 2000, 100, 2)
+    else:
+        dataset_name = dataset.split(".")[0]
+        dataset = os.path.join("datasets", dataset)
+        data = pd.read_csv(dataset)
+        X = data[data.columns[:-1]]
+        X = X.iloc[:,:].values
+        y = data[data.columns[-1]]
+        y = y.values
+        
 
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = int(sys.argv[2]), random_state=42)
 
-    decisionTreeSetup()
-    kNNSetup()
-    randomForestSetup()
-    adaboostSetup()
-    QDASetup()
-    gaussianProcessSetup()
-    naiveBayesClassifierSetup()
-    linearSVCSetup()
-    logisticRegressionSetup()
+    # decisionTreeSetup(50)
+    kNNSetup(100)
+    # randomForestSetup(50)
+    # adaboostSetup()
+    # QDASetup()
+    # naiveBayesClassifierSetup()
+    # linearSVCSetup()
+    # logisticRegressionSetup()
+    # gaussianProcessSetup()
+    # randomForestSetupDepth(1, 50)
+    # randomForestSetupDepth(11, 50)
+
+
+# eeg 14979 total entries 6723 positive clases (44.88 percent positive class)
+# shopper 12245 total entries 1892 positive classes (15.45 percent positive class)

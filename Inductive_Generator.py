@@ -2,6 +2,7 @@ from functools import reduce
 import Data_Generator as Data_Generator
 import numpy as np
 import json
+from tqdm import tqdm
 class Inductive_Generator:
   def __init__(self, mode, clf, classes, X_train, y_train, X_fixed = None, y_fixed=None):
     if mode not in ["sparse", "predict proba", "simple good turing"]:
@@ -56,8 +57,8 @@ class Inductive_Generator:
           return Pf
         all_Pf = list(map(lambda x: generatePf(), range(num_repeat)))
         return all_Pf
-      
-      LDM = (list(map(lambda x: generateLDMHelper(), range(num_datasets))))
+      print("generating LDM")
+      LDM = (list(map(lambda x: generateLDMHelper(), tqdm(range(num_datasets)))))
 
       self.LDM = LDM
       return self.LDM
