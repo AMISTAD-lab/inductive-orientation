@@ -1,3 +1,4 @@
+# Important
 import itertools
 import numpy as np
 from scipy.stats import entropy
@@ -6,18 +7,18 @@ import Inductive_Generator
 import os
 import pandas as pd
 
-# analysis
-"""
-getTarget produces a numpy array with all 0's execept a 1 at the index representing the correct sequence of labeling/
-inputs:
-    X_test: a pandas dataframe representing the features of the test data
-    y_test: an numpy array representing the correct labels of the test data
-    classes: a list represnting the possible classes
-    min_num_accurate: number of elements in the holdout set = X_test that should be identified correctly to be considered as a target
-output:
-    target: a numpy array  with all 0's expect a 1 at the correct index
-"""
+
 def getTarget(X_test, y_test, min_num_accurate, classes=[0,1]):
+    """
+    getTarget produces a numpy array with all 0's execept a 1 at the index representing the correct sequence of labeling/
+    inputs:
+        X_test: a pandas dataframe representing the features of the test data
+        y_test: an numpy array representing the correct labels of the test data
+        classes: a list represnting the possible classes
+        min_num_accurate: number of elements in the holdout set = X_test that should be identified correctly to be considered as a target
+    output:
+        target: a numpy array  with all 0's expect a 1 at the correct index
+    """
     y_test = y_test.astype("int")
     num_holdout_samples = len(X_test)
     all_labels = np.array(list(itertools.product(classes, repeat=num_holdout_samples)))
@@ -29,57 +30,60 @@ def getTarget(X_test, y_test, min_num_accurate, classes=[0,1]):
     target = 1 * (countNumCorrect >= min_num_accurate)
     return target
 
-'''
-computeAlgorithmicBias takes in a target vector and a pD_vector (both numpy arrays)
-Parameters:
-1. target = k-hot vector (acceptable labelings/classification)
-2. pD_vector
 
-output:
-  algorithmic Bias
-'''
 def computeAlgorithmicBias(target, pD_vector):
-  if len(target) != len(pD_vector):
-    raise Exception("Length of target vector and pD_vector does not match")
-  #k = number of acceptable labelings/classification
-  k = np.sum(target)
+    '''
+    computeAlgorithmicBias takes in a target vector and a pD_vector (both numpy arrays)
+    Parameters:
+    1. target = k-hot vector (acceptable labelings/classification)
+    2. pD_vector
 
-  #len(target) = size of search space
-  # k / len(target) = probability of success when uniformly randomly sampling
-  algorithmicBias = np.sum(target * pD_vector) - (k / len(target))
-  return algorithmicBias
+    output:
+    algorithmic Bias
+    '''
+    if len(target) != len(pD_vector):
+        raise Exception("Length of target vector and pD_vector does not match")
+    #k = number of acceptable labelings/classification
+    k = np.sum(target)
 
-'''
-computeEntropy finds the Entropic Expresstivity for a PD vector
-input:
-    PD: an inductive orientation vector
-return:
-    The Entropic Expresstivity for a PD vector
-'''
+    #len(target) = size of search space
+    # k / len(target) = probability of success when uniformly randomly sampling
+    algorithmicBias = np.sum(target * pD_vector) - (k / len(target))
+    return algorithmicBias
+
+
 def computeEntropy(PD):
+    '''
+    computeEntropy finds the Entropic Expresstivity for a PD vector
+    input:
+        PD: an inductive orientation vector
+    return:
+        The Entropic Expresstivity for a PD vector
+    '''
     return entropy(PD, base=2)
 
-'''
-computeEntropyLDM finds the entropies for each sublist (pf, probability distribution simplex vector) of the LDM
-input:
-    LDM: an LDM matrix
-return:
-    entropy_list: a list of doubles that are the entropy values for the corresponding pf
-'''
+
 def computeEntropyLDM(LDM):
+    '''
+    computeEntropyLDM finds the entropies for each sublist (pf, probability distribution simplex vector) of the LDM
+    input:
+        LDM: an LDM matrix
+    return:
+        entropy_list: a list of doubles that are the entropy values for the corresponding pf
+    '''
     def toDistribution(x):
         _, counts = np.unique(x, return_counts=True)
         return counts / sum(counts)
     return np.array([computeEntropy(toDistribution(x)) for x in LDM])
 
-'''
-Algorithmic Capacity = Entropy of PD vector - Expected value of (Entropy of each individual PF vector)
-Parameters: 
-    1. ldm = list of Pf vectors
-    2. pD_vector = PD vector calculated from ldm
-'''
-def computeAlgorithmicCapacity(ldm, pD_vector):
 
+def computeAlgorithmicCapacity(ldm, pD_vector):
+    '''
+    Algorithmic Capacity = Entropy of PD vector - Expected value of (Entropy of each individual PF vector)
+    Parameters: 
+        1. ldm = list of Pf vectors
+        2. pD_vector = PD vector calculated from ldm
+    '''
     #entropy_of_Pfs is a list containing the entropy of each individual Pf vector in ldm
     entropy_of_Pfs = np.array(computeEntropyLDM(ldm))
     print("entropy_of_Pfs: ", entropy_of_Pfs)
@@ -94,31 +98,32 @@ def computeAlgorithmicCapacity(ldm, pD_vector):
 
     return entropy_pD - expected_entropy_of_Pfs
 
-'''
-computeVariance finds the variance of a list of probability distribution simplex vectors
-input:
-    list_of_simplex: a list of probability distribution simplex vectors
-return:
-    variance: a double that represents on average how much the each of the probability distribution simplex vectors 
-    deviate from the average simplex vector
-'''
+
 def computeVariance(list_of_simplex):
+    '''
+    computeVariance finds the variance of a list of probability distribution simplex vectors
+    input:
+        list_of_simplex: a list of probability distribution simplex vectors
+    return:
+        variance: a double that represents on average how much the each of the probability distribution simplex vectors 
+        deviate from the average simplex vector
+    '''
     variance = np.var(list_of_simplex, axis=0)
     return variance
 
-'''
-varianceUptoN finds variance of a list of inductive orientation vectors PD's as the size of the list increases from 2 to max
-inputs:
-    max: an int that represents the maximum set of inductive orientation vectors PD's
-    clfName: a string that represents the name of the classifer
-    clf: an untrained classifier
-    ... refer to getLDM
-returns:
-    run_number: a list that records the size of the inductive orientation vectors PD's
-    variance_per_run: a list that gives the variance corresponding to the run_number
-'''
-def varianceUpToN(list_of_PD):
 
+def varianceUpToN(list_of_PD):
+    '''
+    varianceUptoN finds variance of a list of inductive orientation vectors PD's as the size of the list increases from 2 to max
+    inputs:
+        max: an int that represents the maximum set of inductive orientation vectors PD's
+        clfName: a string that represents the name of the classifer
+        clf: an untrained classifier
+        ... refer to getLDM
+    returns:
+        run_number: a list that records the size of the inductive orientation vectors PD's
+        variance_per_run: a list that gives the variance corresponding to the run_number
+    '''
     variance_per_run = []
 
     for i in range(1, len(list_of_PD)):
@@ -127,14 +132,15 @@ def varianceUpToN(list_of_PD):
         print("Variance after ", i, " runs: ", current_variance)
     return variance_per_run
 
-'''
-singleAnalysis calculates Bias, Entropic Expressivity, and Algorithmic Capacity for a model
-inputs:
-    file: the path to the json file storing the model's LDM and PD
-    target: the target vector to evaluate the model. If not given, then
-            the function will not calculate Bias
-'''
+
 def singleAnalysis(file, target = None):
+    '''
+    singleAnalysis calculates Bias, Entropic Expressivity, and Algorithmic Capacity for a model
+    inputs:
+        file: the path to the json file storing the model's LDM and PD
+        target: the target vector to evaluate the model. If not given, then
+                the function will not calculate Bias
+    '''
     print("Current file: ", file)
     analytics = []
     with open(file) as logs:
@@ -155,16 +161,14 @@ def singleAnalysis(file, target = None):
     return tuple(analytics)
         
 
-'''
-runAnalysis allows multiple calls to singleAnalysis
-inputs:
-    file: the path to either a json file or a directry containing all json files
-    target: the target vector to evaluate the model. If not given, then
-            the function will not calculate Bias
-'''
-
 def runAnalysis(file, target=None, name_column=[], bias_column=[], entropic_expressivity_column = [], algorithmic_capacity_column = []):
-
+    '''
+    runAnalysis allows multiple calls to singleAnalysis
+    inputs:
+        file: the path to either a json file or a directry containing all json files
+        target: the target vector to evaluate the model. If not given, then
+                the function will not calculate Bias
+    '''
     if file[-4:] == "json":
         return singleAnalysis(file, target)
 
@@ -203,15 +207,15 @@ def runAnalysis(file, target=None, name_column=[], bias_column=[], entropic_expr
 #     return percentages_list, variance_list
 
 
-'''
-computeAngle finds the radian angle between two inductive orientation vector using dot product
-input:
-    PD1: a numpy array that represents an inductive orientation vector
-    PD2: a numpy array that represents an inductive orientation vector
-return:
-    angle: a double that presents the angle between the two vectors in radians
-'''
 def computeAngle(PD1, PD2):
+    '''
+    computeAngle finds the radian angle between two inductive orientation vector using dot product
+    input:
+        PD1: a numpy array that represents an inductive orientation vector
+        PD2: a numpy array that represents an inductive orientation vector
+    return:
+        angle: a double that presents the angle between the two vectors in radians
+    '''
     unit_vector_1 = PD1/np.linalg.norm(PD1)
     unit_vector_2 = PD2/np.linalg.norm(PD2)
     dot_product = np.dot(unit_vector_1, unit_vector_2)
