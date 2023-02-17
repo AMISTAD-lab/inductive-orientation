@@ -46,7 +46,7 @@ logisticRegression = LogisticRegression()
 
 # Getting Data
 X, y = generate_fully_synethic(4, 2000, 100, 2)
-X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = 5, random_state=42)
+X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = 10, random_state=42)
 
 # Generating inductive orientation vectors
 
@@ -68,16 +68,17 @@ def decisionTreeSetup(max_branches):
     print(f"All Decision Trees finished. Time elapsed: {(end - start)/60}.")
 
 
-def kNNSetup(max_neighbors):
+def kNNSetup(max_neighbors, num_dataset):
 
     start = time()
 
-    for i in range(1,max_neighbors):
+    for i in range(1,max_neighbors+1):
         print(f"Starting KNN with {i} Neighbors...")
         trial_start = time()
         kNeighborsClassifier = KNeighborsClassifier(n_neighbors=i)
-        kNeighborsClassifier_generator = Inductive_Generator.Inductive_Generator("sparse",kNeighborsClassifier, [0,1], X_train, y_train, X_test, y_test)
-        kNeighborsClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
+        os.mkdir(f"logs/trial{TRIAL_NUM}/KNN{i}")
+        kNeighborsClassifier_generator = Inductive_Generator.Inductive_Generator("sparse",kNeighborsClassifier, [0,1], f"logs/trial{TRIAL_NUM}/KNN{i}", X_train, y_train, X_test, y_test)
+        kNeighborsClassifier_generator.get_LDM(X_test, num_dataset, 5, 0.15, "generate_subset")
         kNeighborsClassifier_generator.compute_PD()
         kNeighborsClassifier_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_KNN{i}.json", f"KNN{i}", dataset_name)
         trial_end = time()
@@ -207,7 +208,7 @@ def logisticRegressionSetup():
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         sys.exit("Usage error: require dataset name and size of holdout set")
-
+    
     logs = os.listdir("logs")
     try:
         TRIAL_NUM = max([int(log.split("l")[1]) for log in logs])+1
@@ -241,7 +242,7 @@ if __name__ == "__main__":
     
     if dataset == "Semi_Random":  
         dataset_name = "SemiRandom"       
-        X, y = generate_fully_synethic(4, 2000, 100, 2)
+        X, y = generate_fully_synethic(4, 100, 100, 2)
     else:
         dataset_name = dataset.split(".")[0]
         dataset = os.path.join("datasets", dataset)
@@ -255,7 +256,7 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = int(sys.argv[2]), random_state=42)
 
     # decisionTreeSetup(50)
-    kNNSetup(100)
+    kNNSetup(2, num_dataset=10)
     # randomForestSetup(50)
     # adaboostSetup()
     # QDASetup()
