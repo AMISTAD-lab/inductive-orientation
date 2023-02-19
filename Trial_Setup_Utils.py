@@ -91,8 +91,7 @@ def kNNSetup(max_neighbors, num_dataset):
 def KNN_n_neighbors(n_neigbors):
     return KNeighborsClassifier(n_neighbors = n_neigbors)
 
-
-def model_setup_loop(model, model_name, max_metric, metric_type, num_dataset, trial_num, num_repeat, dataset_name, X_train, y_train, X_test, y_test):
+def model_setup_loop(model, model_name, max_metric, metric_type, num_dataset, num_repeat, trial_num, dataset_name, X_train, y_train, X_test, y_test):
     start = time()
     for i in range(1, max_metric+1):
         print(f"Starting {model_name} with {i} {metric_type}...")
@@ -282,7 +281,9 @@ if __name__ == "__main__":
 
     # decisionTreeSetup(50)
     #kNNSetup(2, num_dataset=10)
-    model_setup_loop(KNN_n_neighbors, "KNN", 2, "Neighbors", 500, TRIAL_NUM, 5, dataset_name, X_train, X_test, y_train, y_test)
+
+
+    model_setup_loop(model=KNN_n_neighbors, model_name="KNN", max_metric=2, metric_type="Neighbors", num_dataset=500, num_repeat=5, trial_num=TRIAL_NUM, dataset_name=dataset_name, X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test)
     # randomForestSetup(50)
     # adaboostSetup()
     # QDASetup()
