@@ -18,87 +18,34 @@ from time import time
 import os
 import sys
 
-# Decision Tree up to 21
-decisionTreeClassifier3 = DecisionTreeClassifier(max_depth= 3)
+# model specific generator functions
+def decision_tree_max_depth(max_depth):
+    return DecisionTreeClassifier(max_depth=max_depth)
 
-# k-Nearest Neighbors up to 21
-KNN17 = KNeighborsClassifier(n_neighbors=3)
+def knn_n_neighbors(n_neigbors):
+    return KNeighborsClassifier(n_neighbors =n_neigbors)
 
-# Random Forest up to 21
-randomForest17 = RandomForestClassifier(n_estimators=3)
+def random_forest_n_estimators(n_estimators):
+    return RandomForestClassifier(n_estimators=n_estimators)
 
-# Adaboost
-adaboostClassifier50 = AdaBoostClassifier()
+def model_setup_loop(model, model_name, metric_range, metric_type, num_dataset, num_repeat, trial_num, dataset_name, X_train, y_train, X_test, y_test):
+    """
+    model (method) = a method that returns a model
+    model_name (string) = actual name of the model, only for logging
+    metric_range (Range) = range of values for a experimental variable like num_neighbors
+    metric_type (string) = the name of the experimental variable, only for logging
+    num_dataset (int) = the number of dataset to draw from the data distribution
+    num_repeat (int) = the number of repeated ones on a particular subdataset
+    trial_num (int) = which trial we are on, only for logging
+    dataset_name (string) = only for logging
 
-# Quadratic Discriminant
-quadraticDiscriminantAnalysis = QuadraticDiscriminantAnalysis()
-
-# Gaussian Process Classifier  
-gaussianProcessClassifier = GaussianProcessClassifier()
-
-# Gaussian Naive Bayes
-naiveBayesClassifier = GaussianNB()
-
-# Linear Support Vector Machine
-linearSVC = LinearSVC()
-
-# Logistic Regression
-logisticRegression = LogisticRegression()
-
-# Getting Data
-X, y = generate_fully_synethic(4, 2000, 100, 2)
-X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = 10, random_state=42)
-
-# Generating inductive orientation vectors
-
-def decisionTreeSetup(max_branches):
+    """
     start = time()
-
-    for i in range(1,max_branches):
-        print(f"Starting Decision Tree with Depth {i}...")
-        trial_start = time()
-        decisionTreeClassifier = DecisionTreeClassifier(max_depth= i)
-        decisionTreeClassifier_generator = Inductive_Generator.Inductive_Generator("sparse",decisionTreeClassifier, [0,1], X_train, y_train, X_test, y_test)
-        decisionTreeClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-        decisionTreeClassifier_generator.compute_PD()
-        decisionTreeClassifier_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_DecisionTree{i}.json", f"DecisionTree{i}", dataset_name)
-        trial_end = time()
-        print(f"Decision Tree with Depth {i} finished. Time elapsed: {(trial_end - trial_start)/60}.")
-
-    end = time()
-    print(f"All Decision Trees finished. Time elapsed: {(end - start)/60}.")
-
-
-def kNNSetup(max_neighbors, num_dataset):
-
-    start = time()
-
-    for i in range(1,max_neighbors+1):
-        print(f"Starting KNN with {i} Neighbors...")
-        trial_start = time()
-        kNeighborsClassifier = KNeighborsClassifier(n_neighbors=i)
-        os.mkdir(f"logs/trial{TRIAL_NUM}/KNN{i}")
-        kNeighborsClassifier_generator = Inductive_Generator.Inductive_Generator("sparse",kNeighborsClassifier, [0,1], f"logs/trial{TRIAL_NUM}/KNN{i}", X_train, y_train, X_test, y_test)
-        kNeighborsClassifier_generator.get_LDM(X_test, num_dataset, 5, 0.15, "generate_subset")
-        kNeighborsClassifier_generator.compute_PD()
-        kNeighborsClassifier_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_KNN{i}.json", f"KNN{i}", dataset_name)
-        trial_end = time()
-        print(f"KNN with {i} Neighbors finished. Time elapsed: {(trial_end - trial_start)/60}.")
-
-    end = time()
-    print(f"All KNNs finished. Time elapsed: {(end - start)/60}.")
-
-def KNN_n_neighbors(n_neigbors):
-    return KNeighborsClassifier(n_neighbors = n_neigbors)
-
-def model_setup_loop(model, model_name, max_metric, metric_type, num_dataset, num_repeat, trial_num, dataset_name, X_train, y_train, X_test, y_test):
-    start = time()
-    for i in range(1, max_metric+1):
+    for i in metric_range:
         print(f"Starting {model_name} with {i} {metric_type}...")
         trial_start = time()
-        model_iter = model(i) # classifie
-
-        os.mkdir(f"logs/trial{TRIAL_NUM}/{model_name}{i}")
+        model_iter = model(i) # classifier
+        os.mkdir(f"logs/trial{TRIAL_NUM}/{model_name}{i}") # make folder to store the models
         model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], f"logs/trial{trial_num}/{model_name}{i}", X_train, y_train, X_test, y_test)
         model_generator.get_LDM(X_test, num_dataset, num_repeat, 0.15, "generate_subset")
         model_generator.compute_PD()
@@ -109,24 +56,6 @@ def model_setup_loop(model, model_name, max_metric, metric_type, num_dataset, nu
     end = time()
     print(f"All {model_name}s finished. Time elapsed: {(end - start)/60}.")
 
-
-def randomForestSetup(max_estimators):
-
-    start = time()
-
-    for i in range(1,max_estimators):
-        print(f"Starting Random Forest with {i} estimators...")
-        trial_start = time()
-        randomForest = RandomForestClassifier(n_estimators=i)
-        randomForest_generator = Inductive_Generator.Inductive_Generator("sparse",randomForest, [0,1], X_train, y_train, X_test, y_test)
-        randomForest_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-        randomForest_generator.compute_PD()
-        randomForest_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_RandomForest{i}.json", f"RandomForest{i}", dataset_name)
-        trial_end = time()
-        print(f"Random Forest with {i} estimators finished. Time elapsed: {(trial_end - trial_start)/60}.")
-
-    end = time()
-    print(f"All Random Forests finished. Time elapsed: {(end - start)/60}.")
 
 def randomForestSetupDepth(n_estimators, max_depth):
 
@@ -283,7 +212,7 @@ if __name__ == "__main__":
     #kNNSetup(2, num_dataset=10)
 
 
-    model_setup_loop(model=KNN_n_neighbors, model_name="KNN", max_metric=2, metric_type="Neighbors", num_dataset=500, num_repeat=5, trial_num=TRIAL_NUM, dataset_name=dataset_name, X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test)
+    model_setup_loop(model=knn_n_neighbors, model_name="KNN", metric_range=range(1,3), metric_type="Neighbors", num_dataset=500, num_repeat=5, trial_num=TRIAL_NUM, dataset_name=dataset_name, X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test)
     # randomForestSetup(50)
     # adaboostSetup()
     # QDASetup()
