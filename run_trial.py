@@ -1,3 +1,5 @@
+"""Runs experiments (main file)"""
+
 # important file
 import Inductive_Generator
 from Fully_Synthetic import generate_fully_synethic
@@ -75,6 +77,8 @@ def kNNSetup(max_neighbors, num_dataset):
     for i in range(1,max_neighbors+1):
         print(f"Starting KNN with {i} Neighbors...")
         trial_start = time()
+
+        # TODO: add option to use downloaded model
         kNeighborsClassifier = KNeighborsClassifier(n_neighbors=i)
         os.mkdir(f"logs/trial{TRIAL_NUM}/KNN{i}")
         kNeighborsClassifier_generator = Inductive_Generator.Inductive_Generator("sparse",kNeighborsClassifier, [0,1], f"logs/trial{TRIAL_NUM}/KNN{i}", X_train, y_train, X_test, y_test)
@@ -88,12 +92,14 @@ def kNNSetup(max_neighbors, num_dataset):
     print(f"All KNNs finished. Time elapsed: {(end - start)/60}.")
 
 def randomForestSetup(max_estimators):
-
+    """Random Forest"""
     start = time()
 
     for i in range(1,max_estimators):
         print(f"Starting Random Forest with {i} estimators...")
         trial_start = time()
+
+
         randomForest = RandomForestClassifier(n_estimators=i)
         randomForest_generator = Inductive_Generator.Inductive_Generator("sparse",randomForest, [0,1], X_train, y_train, X_test, y_test)
         randomForest_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
@@ -106,7 +112,7 @@ def randomForestSetup(max_estimators):
     print(f"All Random Forests finished. Time elapsed: {(end - start)/60}.")
 
 def randomForestSetupDepth(n_estimators, max_depth):
-
+    """Brute force random forest w/ num_estimators metric (??)"""
     start = time()
 
     for i in range(1,max_depth):
@@ -122,6 +128,21 @@ def randomForestSetupDepth(n_estimators, max_depth):
 
     end = time()
     print(f"All Random Forests finished. Time elapsed: {(end - start)/60}.")
+
+
+def generate_iterable_model(model_name):
+    """Helper to interable_model_setup -- """
+def iterable_model_setup(model, model_name:str, from_download:bool = False, max_metric:int = 200):
+    """
+    Experiments + model generation OR experiments from pre-generated models that iterate over some metric;
+    i.e., random forest, kNN, decisionTreeSetup
+    """
+    start = time()
+
+    for i in range(1)
+    print(f"Starting {model_name} with {i} estimators...")
+
+
 
 def adaboostSetup():
 

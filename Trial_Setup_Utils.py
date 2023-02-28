@@ -4,6 +4,8 @@ from Fully_Synthetic import generate_fully_synethic
 from sklearn import model_selection
 import pandas as pd
 import numpy as np
+import pdb
+import re
 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
@@ -18,6 +20,7 @@ from time import time
 import os
 import sys
 
+
 # model specific generator functions
 def decision_tree_max_depth(max_depth):
     return DecisionTreeClassifier(max_depth=max_depth)
@@ -28,7 +31,11 @@ def knn_n_neighbors(n_neigbors):
 def random_forest_n_estimators(n_estimators):
     return RandomForestClassifier(n_estimators=n_estimators)
 
-def model_setup_loop(model, model_name, metric_range, metric_type, num_dataset, num_repeat, trial_num, dataset_name, X_train, y_train, X_test, y_test):
+#result_number
+#model_number
+def model_setup_load_loop(model, model_name, metric_range, metric_type, 
+                     num_dataset, num_repeat, model_num, dataset_info,
+                    result_num, from_download:bool=False):#from_download:bool = False):
     """
     model (method) = a method that returns a model
     model_name (string) = actual name of the model, only for logging
@@ -36,20 +43,28 @@ def model_setup_loop(model, model_name, metric_range, metric_type, num_dataset, 
     metric_type (string) = the name of the experimental variable, only for logging
     num_dataset (int) = the number of dataset to draw from the data distribution
     num_repeat (int) = the number of repeated ones on a particular subdataset
-    trial_num (int) = which trial we are on, only for logging
+    model_num (int) = which model/trial number we are using (determines whether we use saved models)
     dataset_name (string) = only for logging
+    result_number (int) = 
 
     """
     start = time()
     for i in metric_range:
-        print(f"Starting {model_name} with {i} {metric_type}...")
+        print(f"Starting {model_name} with {i} {metric_type} (from_dowloaded = {from_download})...")
         trial_start = time()
-        model_iter = model(i) # classifier
-        os.mkdir(f"logs/trial{TRIAL_NUM}/{model_name}{i}") # make folder to store the models
-        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], f"logs/trial{trial_num}/{model_name}{i}", X_train, y_train, X_test, y_test)
-        model_generator.get_LDM(X_test, num_dataset, num_repeat, 0.15, "generate_subset")
+        if not from_download :
+            os.mkdir(f"logs/trial{model_num}/{model_name}{i}") # make folder to store the models
+            # os.mkdir(f"result_{result_num}/trial{model_num}/{model_name}{i}") # make folder to store the models
+            model_iter = model(i) # classifier
+        else:
+            result_path = maybe_mkdir("results",f"result_{result_num}/trial{model_num}/{model_name}{i}")
+            #os.mkdir(f"result_{result_num}/trial{model_num}/{model_name}{i}") # make folder to store the models
+            model_iter = None
+        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], f"logs/trial{model_num}/{model_name}{i}", dataset_info)
+        model_generator.get_LDM(dataset_info["X_test"], num_dataset, num_repeat, 0.15, "generate_subset", from_download=from_download)
         model_generator.compute_PD()
-        model_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_{model_name}{i}.json", f"{model_name}{i}", dataset_name)
+        if from_download:
+            model_generator.save_state(f"results/result_{result_num}/trial{model_num}/{model_name}{i}/trial{model_num}_{model_name}{i}.json", f"{model_name}{i}", dataset_info["dataset_name"])
         trial_end = time()
         print(f"{model_name} with {i} {metric_type} finished. Time elapsed: {(trial_end - trial_start)/60}.")
 
@@ -58,7 +73,7 @@ def model_setup_loop(model, model_name, metric_range, metric_type, num_dataset, 
 
 
 def randomForestSetupDepth(n_estimators, max_depth):
-
+    """Random Forest experiments while varying max_depth, fixed number of estimators"""
     start = time()
 
     for i in range(1,max_depth):
@@ -157,6 +172,23 @@ def logisticRegressionSetup():
     end = time()
     print(f"All Logistic Regression finished. Time elapsed: {(end - start)/60}.")
 
+def maybe_mkdir(basepath, folder_name):
+    '''
+        creates folder along a path
+        input:
+            basepath - starting directory to add the folders, must exist already
+            folder_name - path to the final directory beyond the basepath, folders along the way do not need to exist
+        return:
+            exist_path - path to the final created directory
+    '''
+    path_to_add = folder_name.split("/")
+    exist_path = basepath
+    for path in path_to_add:
+        current_path = os.path.join(exist_path, path)
+        if path not in os.listdir(exist_path):
+            os.mkdir(current_path)
+        exist_path = current_path
+    return exist_path
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
@@ -164,7 +196,12 @@ if __name__ == "__main__":
     
     logs = os.listdir("logs")
     try:
-        TRIAL_NUM = max([int(log.split("l")[1]) for log in logs])+1
+        extract_numbs = "[0-9]"
+        existing_files = [re.findall(extract_numbs, x) for x in logs]
+        existing_files = list(map(lambda x: "".join(x), existing_files))
+        existing_files = [int(x) for x in existing_files if len(x) != 0]
+        TRIAL_NUM = max(existing_files)+1
+        # TRIAL_NUM = max([int(log.split("l")[1]) for log in logs])+1
     except:
         TRIAL_NUM = 1
     os.mkdir(os.path.join("logs", f"trial{TRIAL_NUM}"))
@@ -205,14 +242,20 @@ if __name__ == "__main__":
         y = data[data.columns[-1]]
         y = y.values
         
-
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = int(sys.argv[2]), random_state=42)
 
+    dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
     # decisionTreeSetup(50)
     #kNNSetup(2, num_dataset=10)
 
-
-    model_setup_loop(model=knn_n_neighbors, model_name="KNN", metric_range=range(1,3), metric_type="Neighbors", num_dataset=500, num_repeat=5, trial_num=TRIAL_NUM, dataset_name=dataset_name, X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test)
+    # TRIAL_NUM = 0
+    #model_setup_load_loop(model=knn_n_neighbors, model_name="KNN", metric_range=range(1,3), metric_type="Neighbors", num_dataset=500, num_repeat=5, trial_num=TRIAL_NUM, dataset_name=dataset_name, X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test)
+    TRIAL_NUM = 13
+    print(f"TRIAL_NUM is {TRIAL_NUM}")
+    model_setup_load_loop(model=decision_tree_max_depth, model_name="Decision Tree", 
+                          metric_range=range(1,3), metric_type="Depth", num_dataset=500, 
+                          num_repeat=5, model_num=TRIAL_NUM, dataset_info=dataset_info, 
+                          result_num = 2, from_download=True)
     # randomForestSetup(50)
     # adaboostSetup()
     # QDASetup()
@@ -226,3 +269,9 @@ if __name__ == "__main__":
 
 # eeg 14979 total entries 6723 positive clases (44.88 percent positive class)
 # shopper 12245 total entries 1892 positive classes (15.45 percent positive class)
+
+"""
+Run with:
+python Trial_Setup_Utils.py EEG_Eye_State.csv {size of the holdout set=5}
+
+"""

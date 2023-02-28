@@ -9,7 +9,7 @@ import pickle
 import os
 
 class Inductive_Generator:
-  def __init__(self, mode, clf, classes, save_path, X_train, y_train, X_fixed = None, y_fixed=None):
+  def __init__(self, mode, clf, classes, save_path, dataset_info):
     """
     mode (string): "sparse", "predict proba", "simple good turing"
     clf (model from skitlearn): decision tree, etc
@@ -17,17 +17,17 @@ class Inductive_Generator:
     save_path (str): 
     X_train, y_train, X_fixed, y_fixed from dataset
     """
-    if mode not in ["sparse", "predict proba", "simple good turing"]:
+    if mode not in ["sparse", "predict proba", "simple good turing"]: 
       raise Exception("Mode is not one of sparse, predict proba, or simple good turing.")
     self.mode = mode
     self.clf = clf
     self.classes = classes
     self.times_trained = 0
     self.save_path = save_path # global folder for saving models and things
-    self.X_train = X_train
-    self.y_train = y_train
-    self.X_fixed = X_fixed
-    self.y_fixed = y_fixed
+    self.X_train = dataset_info["X_train"]
+    self.y_train = dataset_info["y_train"]
+    self.X_fixed = dataset_info["X_test"] # fixed discontinued  (it was the subset that stayed the same within set of subsets)
+    self.y_fixed = dataset_info["y_test"]
     self.data_generator = Data_Generator.Data_Generator(self.X_train, self.y_train, 42, self.X_fixed, self.y_fixed)
 
 
@@ -58,7 +58,7 @@ class Inductive_Generator:
     elif self.mode == "simple good turing":
       raise Exception("Sorry, only sparse mode is implemented")
   
-  def get_LDM(self, X_test, num_datasets, num_repeat, proportion_of_dataset, data_generation_method, do_replace=False):
+  def get_LDM(self, X_test, num_datasets, num_repeat, proportion_of_dataset, data_generation_method, do_replace=False, from_download=False):
     """
     X_test numpy array: from dataset
     num_datasets (int): number of trials
@@ -74,21 +74,31 @@ class Inductive_Generator:
       raise Exception("Only generate_subset and generate_subset_plus_fixed have been implemented")
 
     if self.mode == "sparse":
-      self.PD_length = len(self.classes)**len(X_test)
+      self.PD_length = len(self.classes)**len(X_test) # length of inductive orientation vector
       num_entries = int(proportion_of_dataset * len(self.X_train)) # size of training subset
 
       def generateLDMHelper(dataset_idx):
+        """Generates LDM matrix"""
         subset_X, subset_y = dg_method(num_entries, do_replace=do_replace) # getting training subset
         def generatePf(repeat_idx):
-          clf_copy = self.train(subset_X, subset_y) #training on a subset to get a model
-          Pf = self.get_simplex(clf_copy, X_test) # note that Pf is just a number
+          """Generates each vector (a binary vector represented by an integer) of LDM matrix"""
           path = os.path.join(self.save_path, f"dataset_{dataset_idx}_repeat_{repeat_idx}.pkl")
-          self.save_model(path, clf_copy)
+          if from_download:
+            try:
+              clf_copy = pickle.load(open(path, "rb"))
+            except:
+              raise Exception(f"No saved model exists in {path}")
+          else:
+            clf_copy = self.train(subset_X, subset_y) # training on a subset to get a model
+            self.save_model(path, clf_copy)
+          Pf = self.get_simplex(clf_copy, X_test) # note that Pf is just a number
           return Pf
+        
         all_Pf = list(map(lambda x: generatePf(x), range(num_repeat))) 
                   # to reduce stochasticity by doing number runs on the same data subset
         
         return all_Pf
+      
       print("generating LDM")
       LDM = (list(map(lambda x: generateLDMHelper(x), tqdm(range(num_datasets)))))
 
