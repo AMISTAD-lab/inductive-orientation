@@ -159,12 +159,14 @@ def logisticRegressionSetup():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        sys.exit("Usage error: require dataset name and size of holdout set")
+    if len(sys.argv) != 4:
+        sys.exit("Usage error: require dataset name, size of holdout set, and model to test")
     
+    # update trial number
     logs = os.listdir("logs")
     try:
-        TRIAL_NUM = max([int(log.split("l")[1]) for log in logs])+1
+        print("bruh")
+        TRIAL_NUM = max([int(log.split("l")[1]) for log in logs])+1 # new trial number 
     except:
         TRIAL_NUM = 1
     os.mkdir(os.path.join("logs", f"trial{TRIAL_NUM}"))
@@ -210,9 +212,54 @@ if __name__ == "__main__":
 
     # decisionTreeSetup(50)
     #kNNSetup(2, num_dataset=10)
-
-
-    model_setup_loop(model=knn_n_neighbors, model_name="KNN", metric_range=range(1,3), metric_type="Neighbors", num_dataset=500, num_repeat=5, trial_num=TRIAL_NUM, dataset_name=dataset_name, X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test)
+    
+    # choose which model to test
+    is_loop= False
+    if sys.argv[3].upper() in "DECISION_TREE":
+        model = decision_tree_max_depth
+        model_name = "Decision Tree"
+        metric_type = "Depth"
+        is_loop = True # whether model must loop over metric
+    elif sys.argv[3].upper() in "KNN":
+        model = knn_n_neighbors
+        model_name = "KNN"
+        metric_type = "Neighbors"
+        is_loop = True
+    elif sys.argv[3].upper() in "RANDOM_FOREST":
+        model = randomForestSetupDepth
+        model_name = "Random Forest"
+        metric_type = "Estimators"
+        is_loop = True
+    elif sys.argv[3].upper() in "ADABOOST":
+        model = adaboostSetup
+        model_name = "Adaboost"
+    elif sys.argv[3].upper() in "QDA":
+        model = adaboostSetup
+        model_name = "QDA"
+    elif sys.argv[3].upper() in "GAUSSIAN":
+        model = gaussianProcessSetup
+        model_name = "Gaussian"
+    elif sys.argv[3].upper() in "NAIVE_BAYES":
+        model = naiveBayesClassifierSetup
+        model_name = "Naive Bayes"
+    elif sys.argv[3].upper() in "LINEAR_SVC":
+        model = linearSVCSetup
+        model_name = "Linear SVC"
+    elif sys.argv[3].upper() in "LOGISTIC_REGRESSION":
+        model = logisticRegressionSetup
+        model_name = "Logistic Regression"
+    else:
+        print("Running all")
+        #TODO: implement thing to run all models
+        
+    if is_loop:
+        model_setup_loop(model=model, model_name=model_name, metric_range=range(1,3), 
+                        metric_type=metric_type, num_dataset=500, num_repeat=5, trial_num=TRIAL_NUM, 
+                        dataset_name=dataset_name, X_train=X_train, X_test=X_test, y_train=y_train, 
+                        y_test=y_test)
+    else:
+        print("Not yet implemented")
+        #TODO: implement non-looping generic setup
     # randomForestSetup(50)
     # adaboostSetup()
     # QDASetup()

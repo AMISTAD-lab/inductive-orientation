@@ -1,3 +1,5 @@
+"""Discontinued file. See Trial_Setup_Utils"""
+
 # important file
 import Inductive_Generator
 from Fully_Synthetic import generate_fully_synethic
