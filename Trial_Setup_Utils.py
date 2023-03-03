@@ -29,6 +29,7 @@ def random_forest_n_estimators(n_estimators):
     return RandomForestClassifier(n_estimators=n_estimators)
 
 def model_setup_loop(model, model_name, metric_range, metric_type, num_dataset, num_repeat, trial_num, dataset_name, X_train, y_train, X_test, y_test):
+    # TODO: add num_holdouts and holdout_size parameters
     """
     model (method) = a method that returns a model
     model_name (string) = actual name of the model, only for logging
@@ -38,6 +39,10 @@ def model_setup_loop(model, model_name, metric_range, metric_type, num_dataset, 
     num_repeat (int) = the number of repeated ones on a particular subdataset
     trial_num (int) = which trial we are on, only for logging
     dataset_name (string) = only for logging
+
+    num_holdouts (int) = number of holdout sets gathered from
+    holdout_size (int) = size of each holdout set
+
 
     """
     start = time()
@@ -169,7 +174,10 @@ if __name__ == "__main__":
         TRIAL_NUM = max([int(log.split("l")[1]) for log in logs])+1 # new trial number 
     except:
         TRIAL_NUM = 1
-    os.mkdir(os.path.join("logs", f"trial{TRIAL_NUM}"))
+
+    # make new folders for this trial
+    os.mkdir(os.path.join("logs", f"trial{TRIAL_NUM}")) # logs stores saved models, holdout sets, which dataset parts they were trained on
+    os.mkdir(os.path.join("results", f"trial{TRIAL_NUM}")) # results stores LDM and Pd (inductive orientation vector)
 
     print(sys.argv)
     if sys.argv[1] in "Abalone":
@@ -206,18 +214,22 @@ if __name__ == "__main__":
         X = X.iloc[:,:].values
         y = data[data.columns[-1]]
         y = y.values
-        
-
-    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = int(sys.argv[2]), random_state=42)
-
-    # decisionTreeSetup(50)
-    #kNNSetup(2, num_dataset=10)
     
+    # ----- NEW IMPORTANT CHANGES ------
+    #TODO: new input of test_train_ratio --> test section of data will be pool for randomly selected holdout sets
+    test_train_ratio = 0.20 # set for now
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=test_train_ratio, random_state=42)
+    # since X_train is way bigger, now need to implement thing in Inductive_Generator to randomly select and download different holdout sets
+
+    # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = int(sys.argv[2]), random_state=42) # <- old code, whole X_train/X_test is tiny
+                                                                                                                        # holdout set (maybe lead to anomaly cases)
+    #NOTE: old code set test_size = 5, but sklearn documentation says that it should be a ratio from 0.0 to 1.0 (?)
+
     # choose which model to test
     is_loop= False
     if sys.argv[3].upper() in "DECISION_TREE":
         model = decision_tree_max_depth
-        model_name = "Decision Tree"
+        model_name = "Decision Tree" # TODO: implement enum system for model names so we don't get into annoying errors
         metric_type = "Depth"
         is_loop = True # whether model must loop over metric
     elif sys.argv[3].upper() in "KNN":
@@ -260,6 +272,9 @@ if __name__ == "__main__":
     else:
         print("Not yet implemented")
         #TODO: implement non-looping generic setup
+
+
+
     # randomForestSetup(50)
     # adaboostSetup()
     # QDASetup()
@@ -269,6 +284,10 @@ if __name__ == "__main__":
     # gaussianProcessSetup()
     # randomForestSetupDepth(1, 50)
     # randomForestSetupDepth(11, 50)
+
+        # decisionTreeSetup(50)
+    #kNNSetup(2, num_dataset=10)
+    
 
 
 # eeg 14979 total entries 6723 positive clases (44.88 percent positive class)
