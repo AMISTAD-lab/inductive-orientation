@@ -33,6 +33,26 @@ def random_forest_n_estimators(n_estimators):
 
 #result_number
 #model_number
+
+def model_training_loop(model, model_name, metric_range, metric_type, 
+                     num_dataset, num_repeat, model_num, dataset_info, proportion_of_dataset):
+    start = time()
+    for i in metric_range:
+        print(f"Training {model_name} with {i} {metric_type}")
+        trial_start = time()
+        saving_dir = f"models/trial{model_num}/{model_name}{i}"
+        maybe_mkdir(".", saving_dir) # make folder to store the models
+        model_iter = model(i) # classifier
+        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], saving_dir, dataset_info, holdout_size=None, num_holdouts=None)
+        model_generator.get_LDM(None, num_dataset, num_repeat, proportion_of_dataset, "generate_subset", from_download=False)
+    
+        trial_end = time()
+        print(f"Training of {model_name} with {i} {metric_type} finished. Time elapsed: {(trial_end - trial_start)/60}.")
+
+    end = time()
+    print(f"All {model_name}s finished training. Time elapsed: {(end - start)/60}.")
+
+
 def model_setup_load_loop(model, model_name, metric_range, metric_type, 
                      num_dataset, num_repeat, model_num, dataset_info,
                     result_num, from_download:bool=False):#from_download:bool = False):
@@ -46,6 +66,10 @@ def model_setup_load_loop(model, model_name, metric_range, metric_type,
     model_num (int) = which model/trial number we are using (determines whether we use saved models)
     dataset_name (string) = only for logging
     result_number (int) = 
+
+    num_holdouts (int) = number of holdout sets gathered from
+    holdout_size (int) = size of each holdout set
+
 
     """
     start = time()
@@ -191,9 +215,10 @@ def maybe_mkdir(basepath, folder_name):
     return exist_path
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        sys.exit("Usage error: require dataset name and size of holdout set")
+    if len(sys.argv) != 4:
+        sys.exit("Usage error: require dataset name, size of holdout set, and model to test")
     
+    # update trial number
     logs = os.listdir("logs")
     try:
         extract_numbs = "[0-9]"
@@ -204,7 +229,10 @@ if __name__ == "__main__":
         # TRIAL_NUM = max([int(log.split("l")[1]) for log in logs])+1
     except:
         TRIAL_NUM = 1
-    os.mkdir(os.path.join("logs", f"trial{TRIAL_NUM}"))
+
+    # make new folders for this trial
+    os.mkdir(os.path.join("logs", f"trial{TRIAL_NUM}")) # logs stores saved models, holdout sets, which dataset parts they were trained on
+    os.mkdir(os.path.join("results", f"trial{TRIAL_NUM}")) # results stores LDM and Pd (inductive orientation vector)
 
     print(sys.argv)
     if sys.argv[1] in "Abalone":
@@ -241,21 +269,72 @@ if __name__ == "__main__":
         X = X.iloc[:,:].values
         y = data[data.columns[-1]]
         y = y.values
-        
-    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = int(sys.argv[2]), random_state=42)
+    
+    # ----- NEW IMPORTANT CHANGES ------
+    #TODO: new input of test_train_ratio --> test section of data will be pool for randomly selected holdout sets
+    test_train_ratio = 0.20 # set for now
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=test_train_ratio, random_state=42)
+    # since X_train is way bigger, now need to implement thing in Inductive_Generator to randomly select and download different holdout sets
 
-    dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
-    # decisionTreeSetup(50)
-    #kNNSetup(2, num_dataset=10)
+    # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = int(sys.argv[2]), random_state=42) # <- old code, whole X_train/X_test is tiny
+                                                                                                                        # holdout set (maybe lead to anomaly cases)
+    #NOTE: old code set test_size = 5, but sklearn documentation says that it should be a ratio from 0.0 to 1.0 (?)
 
-    # TRIAL_NUM = 0
-    #model_setup_load_loop(model=knn_n_neighbors, model_name="KNN", metric_range=range(1,3), metric_type="Neighbors", num_dataset=500, num_repeat=5, trial_num=TRIAL_NUM, dataset_name=dataset_name, X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test)
-    TRIAL_NUM = 13
-    print(f"TRIAL_NUM is {TRIAL_NUM}")
-    model_setup_load_loop(model=decision_tree_max_depth, model_name="Decision Tree", 
-                          metric_range=range(1,3), metric_type="Depth", num_dataset=500, 
-                          num_repeat=5, model_num=TRIAL_NUM, dataset_info=dataset_info, 
-                          result_num = 2, from_download=True)
+    # choose which model to test
+    is_loop= False
+    if sys.argv[3].upper() in "DECISION_TREE":
+        model = decision_tree_max_depth
+        model_name = "Decision Tree" # TODO: implement enum system for model names so we don't get into annoying errors
+        metric_type = "Depth"
+        is_loop = True # whether model must loop over metric
+    elif sys.argv[3].upper() in "KNN":
+        model = knn_n_neighbors
+        model_name = "KNN"
+        metric_type = "Neighbors"
+        is_loop = True
+    elif sys.argv[3].upper() in "RANDOM_FOREST":
+        model = randomForestSetupDepth
+        model_name = "Random Forest"
+        metric_type = "Estimators"
+        is_loop = True
+    elif sys.argv[3].upper() in "ADABOOST":
+        model = adaboostSetup
+        model_name = "Adaboost"
+    elif sys.argv[3].upper() in "QDA":
+        model = adaboostSetup
+        model_name = "QDA"
+    elif sys.argv[3].upper() in "GAUSSIAN":
+        model = gaussianProcessSetup
+        model_name = "Gaussian"
+    elif sys.argv[3].upper() in "NAIVE_BAYES":
+        model = naiveBayesClassifierSetup
+        model_name = "Naive Bayes"
+    elif sys.argv[3].upper() in "LINEAR_SVC":
+        model = linearSVCSetup
+        model_name = "Linear SVC"
+    elif sys.argv[3].upper() in "LOGISTIC_REGRESSION":
+        model = logisticRegressionSetup
+        model_name = "Logistic Regression"
+    else:
+        print("Running all")
+        #TODO: implement thing to run all models
+    
+
+    pdb.set_trace()
+    if is_loop:
+        dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
+        # model_setup_load_loop(model=model, model_name=model_name, metric_range=range(1,3), 
+        #                 metric_type=metric_type, num_dataset=500, num_repeat=5, trial_num=TRIAL_NUM, 
+        #                 dataset_info=dataset_info)
+        model_training_loop(model=model, model_name=model_name, metric_range=range(1,3), 
+                        metric_type=metric_type, num_dataset=500, num_repeat=5, model_num=TRIAL_NUM, 
+                        dataset_info=dataset_info, proportion_of_dataset=0.15)
+    else:
+        print("Not yet implemented")
+        #TODO: implement non-looping generic setup
+
+
+
     # randomForestSetup(50)
     # adaboostSetup()
     # QDASetup()
@@ -265,6 +344,10 @@ if __name__ == "__main__":
     # gaussianProcessSetup()
     # randomForestSetupDepth(1, 50)
     # randomForestSetupDepth(11, 50)
+
+        # decisionTreeSetup(50)
+    #kNNSetup(2, num_dataset=10)
+    
 
 
 # eeg 14979 total entries 6723 positive clases (44.88 percent positive class)
