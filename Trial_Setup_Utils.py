@@ -231,8 +231,8 @@ if __name__ == "__main__":
         TRIAL_NUM = 1
 
     # make new folders for this trial
-    os.mkdir(os.path.join("logs", f"trial{TRIAL_NUM}")) # logs stores saved models, holdout sets, which dataset parts they were trained on
-    os.mkdir(os.path.join("results", f"trial{TRIAL_NUM}")) # results stores LDM and Pd (inductive orientation vector)
+    # os.mkdir(os.path.join("logs", f"trial{TRIAL_NUM}")) # logs stores saved models, holdout sets, which dataset parts they were trained on
+    # os.mkdir(os.path.join("results", f"trial{TRIAL_NUM}")) # results stores LDM and Pd (inductive orientation vector)
 
     print(sys.argv)
     if sys.argv[1] in "Abalone":
@@ -320,13 +320,12 @@ if __name__ == "__main__":
         #TODO: implement thing to run all models
     
 
-    pdb.set_trace()
     if is_loop:
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
         # model_setup_load_loop(model=model, model_name=model_name, metric_range=range(1,3), 
         #                 metric_type=metric_type, num_dataset=500, num_repeat=5, trial_num=TRIAL_NUM, 
         #                 dataset_info=dataset_info)
-        model_training_loop(model=model, model_name=model_name, metric_range=range(1,3), 
+        model_training_loop(model=model, model_name=model_name, metric_range=range(1,7), 
                         metric_type=metric_type, num_dataset=500, num_repeat=5, model_num=TRIAL_NUM, 
                         dataset_info=dataset_info, proportion_of_dataset=0.15)
     else:
