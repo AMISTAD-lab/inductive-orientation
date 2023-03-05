@@ -36,6 +36,7 @@ def random_forest_n_estimators(n_estimators):
 
 def model_training_loop(model, model_name, metric_range, metric_type, 
                      num_dataset, num_repeat, model_num, dataset_info, proportion_of_dataset):
+    """"Trains and downloads LDMs"""
     start = time()
     for i in metric_range:
         print(f"Training {model_name} with {i} {metric_type}")
@@ -53,9 +54,10 @@ def model_training_loop(model, model_name, metric_range, metric_type,
     print(f"All {model_name}s finished training. Time elapsed: {(end - start)/60}.")
 
 
-def model_setup_load_loop(model, model_name, metric_range, metric_type, 
-                     num_dataset, num_repeat, model_num, dataset_info,
-                    result_num, from_download:bool=False):#from_download:bool = False):
+
+def model_load_loop(model, model_name:str, metric_range:tuple, metric_type:str, 
+                     num_dataset:int, num_repeat:int, model_num:int, 
+                    result_num:int, dataset_info:dict, num_holdouts:int, holdout_size:int):#from_download:bool = False):
     """
     model (method) = a method that returns a model
     model_name (string) = actual name of the model, only for logging
@@ -65,136 +67,26 @@ def model_setup_load_loop(model, model_name, metric_range, metric_type,
     num_repeat (int) = the number of repeated ones on a particular subdataset
     model_num (int) = which model/trial number we are using (determines whether we use saved models)
     dataset_name (string) = only for logging
-    result_number (int) = 
+    result_number (int) = where to store our result, like a result trial number
 
     num_holdouts (int) = number of holdout sets gathered from
     holdout_size (int) = size of each holdout set
-
-
     """
     start = time()
     for i in metric_range:
-        print(f"Starting {model_name} with {i} {metric_type} (from_dowloaded = {from_download})...")
+        print(f"Starting result {result_num} using models from model {model_name} with {i} {metric_type}")
         trial_start = time()
-        if not from_download :
-            os.mkdir(f"logs/trial{model_num}/{model_name}{i}") # make folder to store the models
-            # os.mkdir(f"result_{result_num}/trial{model_num}/{model_name}{i}") # make folder to store the models
-            model_iter = model(i) # classifier
-        else:
-            result_path = maybe_mkdir("results",f"result_{result_num}/trial{model_num}/{model_name}{i}")
-            #os.mkdir(f"result_{result_num}/trial{model_num}/{model_name}{i}") # make folder to store the models
-            model_iter = None
-        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], f"logs/trial{model_num}/{model_name}{i}", dataset_info)
-        model_generator.get_LDM(dataset_info["X_test"], num_dataset, num_repeat, 0.15, "generate_subset", from_download=from_download)
-        model_generator.compute_PD()
-        if from_download:
-            model_generator.save_state(f"results/result_{result_num}/trial{model_num}/{model_name}{i}/trial{model_num}_{model_name}{i}.json", f"{model_name}{i}", dataset_info["dataset_name"])
+        maybe_mkdir(".", f"results/trial{result_num}/model{model_num}/{model_name}{i}") # make folder to store the LDMs
+        model_iter = model(i) # classifier
+        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], f"models/trial{model_num}/{model_name}{i}", dataset_info, holdout_size, num_holdouts)
+        model_generator.getN_LDM_Pf(dataset_info["X_test"], dataset_info["y_test"], num_dataset, num_repeat, 0.15, from_download= True)
+        model_generator.save_state(f"results/trial{result_num}/model{model_num}/{model_name}{i}/trial{model_num}_{model_name}{i}.json", f"{model_name}{i}", dataset_info["dataset_name"])
         trial_end = time()
         print(f"{model_name} with {i} {metric_type} finished. Time elapsed: {(trial_end - trial_start)/60}.")
 
     end = time()
     print(f"All {model_name}s finished. Time elapsed: {(end - start)/60}.")
 
-
-def randomForestSetupDepth(n_estimators, max_depth):
-    """Random Forest experiments while varying max_depth, fixed number of estimators"""
-    start = time()
-
-    for i in range(1,max_depth):
-        print(f"Starting Random Forest with {i} estimators...")
-        trial_start = time()
-        randomForest = RandomForestClassifier(n_estimators=n_estimators, max_depth=i)
-        randomForest_generator = Inductive_Generator.Inductive_Generator("sparse",randomForest, [0,1], X_train, y_train, X_test, y_test)
-        randomForest_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-        randomForest_generator.compute_PD()
-        randomForest_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_RandomForest{n_estimators}EstDepth{i}.json", f"RandomForest{i}", dataset_name)
-        trial_end = time()
-        print(f"Random Forest with {i} estimators finished. Time elapsed: {(trial_end - trial_start)/60}.")
-
-    end = time()
-    print(f"All Random Forests finished. Time elapsed: {(end - start)/60}.")
-
-def adaboostSetup():
-
-    start = time()
-    print(f"Starting Adaboost...")
-    adaboostClassifier50 = AdaBoostClassifier()
-    adaboostClassifier50_generator = Inductive_Generator.Inductive_Generator("sparse",adaboostClassifier50, [0,1], X_train, y_train, X_test, y_test)
-    adaboostClassifier50_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-    adaboostClassifier50_generator.compute_PD()
-    adaboostClassifier50_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_Adaboost50.json", f"Adaboost50", dataset_name)
-    end = time()
-    print(f"All Adaboost finished. Time elapsed: {(end - start)/60}.")
-
-def QDASetup():
-
-    start = time()
-    print(f"Starting QDA...")
-    quadraticDiscriminantAnalysis = QuadraticDiscriminantAnalysis()
-    quadraticDiscriminantAnalysis_generator = Inductive_Generator.Inductive_Generator("sparse",quadraticDiscriminantAnalysis, [0,1], X_train, y_train, X_test, y_test)
-    quadraticDiscriminantAnalysis_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-    quadraticDiscriminantAnalysis_generator.compute_PD()
-    quadraticDiscriminantAnalysis_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_QuadraticDiscriminantAnalysis.json", f"QuadraticDiscriminantAnalysis", dataset_name)
-    end = time()
-    print(f"All QDA finished. Time elapsed: {(end - start)/60}.")
-
-def gaussianProcessSetup():
-
-    start = time()
-    print(f"Starting GaussianProcessClassifier...")
-    gaussianProcessClassifier = GaussianProcessClassifier()
-    print("1")
-    gaussianProcessClassifier_generator = Inductive_Generator.Inductive_Generator("sparse",gaussianProcessClassifier, [0,1], X_train, y_train, X_test, y_test)
-    print("2")
-    gaussianProcessClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-    print("3")
-    gaussianProcessClassifier_generator.compute_PD()
-    print("4")
-    gaussianProcessClassifier_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_GaussianProcessClassifier.json", f"GaussianProcessClassifier", dataset_name)
-    print("5")
-    end = time()
-    print(f"All GaussianProcessClassifier finished. Time elapsed: {(end - start)/60}.")
-
-def naiveBayesClassifierSetup():
-
-    start = time()
-    print(f"Starting Naive Bayes Classifier...")
-    naiveBayesClassifier = GaussianNB()
-    print("1")
-    naiveBayesClassifier_generator = Inductive_Generator.Inductive_Generator("sparse",naiveBayesClassifier, [0,1], X_train, y_train, X_test, y_test)
-    print("2")
-    naiveBayesClassifier_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-    print("3")
-    naiveBayesClassifier_generator.compute_PD()
-    print("4")
-    naiveBayesClassifier_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_NaiveBayesClassifier.json", f"NaiveBayesClassifier", dataset_name)
-    print("5")
-    end = time()
-    print(f"All Naive Bayes Classifier finished. Time elapsed: {(end - start)/60}.")
-
-def linearSVCSetup():
-
-    start = time()
-    print(f"Starting Linear SVC...")
-    linearSVC = LinearSVC()
-    linearSVC_generator = Inductive_Generator.Inductive_Generator("sparse",linearSVC, [0,1], X_train, y_train, X_test, y_test)
-    linearSVC_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-    linearSVC_generator.compute_PD()
-    linearSVC_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_LinearSVC.json", f"LinearSVC", dataset_name)
-    end = time()
-    print(f"All Linear SVC finished. Time elapsed: {(end - start)/60}.")
-
-def logisticRegressionSetup():
-
-    start = time()
-    print(f"Starting Logistic Regression...")
-    logisticRegression = LogisticRegression()
-    logisticRegression_generator = Inductive_Generator.Inductive_Generator("sparse",logisticRegression, [0,1], X_train, y_train, X_test, y_test)
-    logisticRegression_generator.get_LDM(X_test, 500, 5, 0.15, "generate_subset")
-    logisticRegression_generator.compute_PD()
-    logisticRegression_generator.save_state(f"logs/trial{TRIAL_NUM}/trial{TRIAL_NUM}_LogisticRegression.json", f"LogisticRegression", dataset_name)
-    end = time()
-    print(f"All Logistic Regression finished. Time elapsed: {(end - start)/60}.")
 
 def maybe_mkdir(basepath, folder_name):
     '''
@@ -215,8 +107,8 @@ def maybe_mkdir(basepath, folder_name):
     return exist_path
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        sys.exit("Usage error: require dataset name, size of holdout set, and model to test")
+    if len(sys.argv) != 5:
+        sys.exit("Usage error: require dataset name, size of holdout set, model to test, and input model number")
     
     # update trial number
     logs = os.listdir("logs")
@@ -270,6 +162,7 @@ if __name__ == "__main__":
         y = data[data.columns[-1]]
         y = y.values
     
+    
     # ----- NEW IMPORTANT CHANGES ------
     #TODO: new input of test_train_ratio --> test section of data will be pool for randomly selected holdout sets
     test_train_ratio = 0.20 # set for now
@@ -319,15 +212,19 @@ if __name__ == "__main__":
         print("Running all")
         #TODO: implement thing to run all models
     
+    trial_mode = "inference"
+    model_num = sys.argv[4]
 
-    if is_loop:
+    if trial_mode == "training":
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
-        # model_setup_load_loop(model=model, model_name=model_name, metric_range=range(1,3), 
-        #                 metric_type=metric_type, num_dataset=500, num_repeat=5, trial_num=TRIAL_NUM, 
-        #                 dataset_info=dataset_info)
         model_training_loop(model=model, model_name=model_name, metric_range=range(1,7), 
-                        metric_type=metric_type, num_dataset=500, num_repeat=5, model_num=TRIAL_NUM, 
+                        metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=TRIAL_NUM, 
                         dataset_info=dataset_info, proportion_of_dataset=0.15)
+    elif trial_mode == "inference":
+        dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
+        model_load_loop(model=model, model_name=model_name, metric_range=range(1,7), 
+                        metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=model_num,
+                        dataset_info=dataset_info, result_num=TRIAL_NUM, num_holdouts=2, holdout_size=5)
     else:
         print("Not yet implemented")
         #TODO: implement non-looping generic setup

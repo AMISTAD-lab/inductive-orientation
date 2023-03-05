@@ -7,6 +7,7 @@ from tqdm import tqdm
 import copy
 import pickle
 import os
+import pdb
 
 class Inductive_Generator:
   def __init__(self, mode, clf, classes, save_path, dataset_info, holdout_size, num_holdouts):
@@ -66,23 +67,28 @@ class Inductive_Generator:
     
 
   # -----------------NEW STUFF--------------------
-  def getN_LDM_Pf(self, num_datasets, num_repeat, proportion_of_dataset, data_generation_method, do_replace=False):
+  
+
+  def getN_LDM_Pf(self, X_test, y_test, num_datasets, num_repeat, proportion_of_dataset, from_download = False, do_replace=True):
     """Gets self.num_holdouts for each holdout set --> gets LDM and Pf (HASN'T BEEN TESTED)"""
     holdout_sets_x, holdout_sets_y = Data_Generator.generateN_holdout_sets(self.num_holdouts, self.holdout_size,
-                                                                            self.X_test, self.X_train, do_replace = True)
+                                                                            X_test, y_test, do_replace = True)
     #FIXME: do we need holdout_sets_y or nah
     #TODO: download holdout_sets in json
 
     # create list of LDMs associated with each holdout set
     for holdout_set in holdout_sets_x:
-      self.LDMs.append(self.get_LDM(holdout_set, num_datasets, num_repeat, proportion_of_dataset, data_generation_method, do_replace=False))
+      #pdb.set_trace()
+      self.LDMs.append(self.get_LDM(holdout_set, num_datasets, num_repeat, proportion_of_dataset, 
+                                    "generate_subset", from_download=from_download, do_replace=do_replace))
   
     # compute associated PDs
     for LDM in self.LDMs:
       self.PDs.append(self.compute_PD_new(LDM))
+    
 
       
-  def get_LDM(self, X_test, num_datasets, num_repeat, proportion_of_dataset, data_generation_method, do_replace=False, from_download=False):
+  def get_LDM(self, X_test, num_datasets, num_repeat, proportion_of_dataset, data_generation_method, do_replace=True, from_download=False):
     """
     Returns LDM matrix of 
     X_test numpy array: from dataset (holdout set???)
@@ -168,7 +174,6 @@ class Inductive_Generator:
       PD = np.zeros(self.PD_length)
       for i, index in enumerate(values):
         PD[index] = counts[i]
-      self.PD = PD
       return PD
 
     elif self.mode == "predict proba":

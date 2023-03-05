@@ -27,27 +27,6 @@ class Data_Generator: #TODO: add documentation for all methods
     random_subset_y = np.array([self.dataset_y[i] for i in indices])
     return random_subset_X, random_subset_y
   
-  # TODO: UNFINISHEDadd generate_holdout_sets here
-  def generate_holdout_set(self, holdout_size, X_test, X_train, do_replace:bool = True):
-    """Helper. Generate num_holdouts holdout sets from X_tests of holdout_size"""
-    indices = np.array(holdout_size)
-    indices = self.rng.choice(indices, holdout_size, do_replace)
-    # TODO: if it's numpy we can index into everything
-    holdout_set_X = np.array([self.dataset_x[i] for i in indices]) 
-    holdout_set_y = np.array([self.dataset_y[i] for i in indices])
-    return holdout_set_X, holdout_set_y
-
-  def generateN_holdout_sets(self, num_holdouts, holdout_size,  X_test, X_train, do_replace:bool = True):
-    """Generate num_holdouts holdout sets from X_tests of holdout_size. Returns two 2D arrays of each holdout set (each of x and y)"""
-    holdout_sets_x = []
-    holdout_sets_y = []
-
-    for i in range(num_holdouts): # generate and append holdout sets
-      new_set_x, new_set_y = self.generate_holdout_set(self, holdout_size)
-      holdout_sets_x.append(new_set_x)
-      holdout_sets_y.append(new_set_y)
-
-    return holdout_sets_x, holdout_sets_y
   
 
   def first_n_elements(self, num_entries):
@@ -63,3 +42,27 @@ class Data_Generator: #TODO: add documentation for all methods
 
   def split_dataset(self, num_entries):
     raise Exception("Function not implemented.")
+
+# end of the object
+
+def generate_holdout_set(holdout_size, X_test, y_test, do_replace:bool = True, seed_num=42):
+  """Helper. Generate num_holdouts holdout sets from X_tests of holdout_size"""
+  # indices = np.array(len(X_test))
+  seed = np.random.default_rng(seed_num)
+  indices = seed.choice(len(X_test), holdout_size, do_replace)
+  # TODO: if it's numpy we can index into everything
+  holdout_set_X = np.array([X_test[i] for i in indices]) 
+  holdout_set_y = np.array([y_test[i] for i in indices])
+  return holdout_set_X, holdout_set_y
+
+def generateN_holdout_sets(num_holdouts, holdout_size,  X_test, y_test, do_replace:bool = True, seed_num=42):
+  """Generate num_holdouts holdout sets from X_tests of holdout_size. Returns two 2D arrays of each holdout set (each of x and y)"""
+  holdout_sets_x = []
+  holdout_sets_y = []
+
+  for i in range(num_holdouts): # generate and append holdout sets
+    new_set_x, new_set_y = generate_holdout_set(holdout_size, X_test, y_test, do_replace, seed_num)
+    holdout_sets_x.append(new_set_x)
+    holdout_sets_y.append(new_set_y)
+
+  return holdout_sets_x, holdout_sets_y
