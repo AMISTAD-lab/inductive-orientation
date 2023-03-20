@@ -1,4 +1,6 @@
-# Important
+"""
+Generates data for LDM and inductive orientation vector of specified model class, dataset, holdout set size, and number of holdout sets
+"""
 from functools import reduce 
 import Data_Generator as Data_Generator
 import numpy as np

@@ -1,4 +1,7 @@
-# Important
+"""
+TODO: file header comment
+"""
+
 import itertools
 import numpy as np
 from scipy.stats import entropy
