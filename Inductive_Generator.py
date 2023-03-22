@@ -197,6 +197,7 @@ class Inductive_Generator:
     self.dataset_name = dataset_name
     #State = {"model": self.model_name, "dataset": self.dataset_name, "LDM":self.LDM, "PD": self.PD}
     
+    # TODO: save seeds here
     State = {"model": self.model_name, "dataset": self.dataset_name, "LDMs":self.LDMs, "PDs": self.PDs} # new state, TODO: add place to save holdout sets and X_test
     with open(file, "a") as logs:
       json.dump(State, fp=logs, cls=Inductive_Generator_Encoder)

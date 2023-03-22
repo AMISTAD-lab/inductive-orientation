@@ -35,6 +35,7 @@ class Data_Generator: #TODO: add documentation for all methods
     return subset_X, subset_y
 
   def generate_subset_plus_fixed(self, num_entries, do_replace=False):
+    """Not used"""
     random_subset_X, random_subset_y = self.generate_subset(num_entries-len(self.fixed_dataset_x), do_replace)
     random_subset_X = np.concatenate((random_subset_X, self.fixed_dataset_x))
     random_subset_y = np.concatenate((random_subset_y, self.fixed_dataset_y))

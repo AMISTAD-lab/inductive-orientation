@@ -1,3 +1,4 @@
+
 #Important
 # 2 to 12 dimensions; size of dataset vary between 100 to 5000 samples
 
@@ -5,6 +6,7 @@ import numpy as np
 
 def generate_fully_synethic(n_features, n_samples, max_value, num_classes, seed=42):
     """
+    Generates random dataset
     n_features (int): number of features in the X
     n_samples (int): number of samples aka size of the dataset.
     max_value (int): how big each of the feautres in the X vector can be

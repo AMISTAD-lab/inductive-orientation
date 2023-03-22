@@ -18,7 +18,7 @@ def getTarget(X_test, y_test, min_num_accurate, classes=[0,1]):
         X_test: a pandas dataframe representing the features of the test data
         y_test: an numpy array representing the correct labels of the test data
         classes: a list represnting the possible classes
-        min_num_accurate: number of elements in the holdout set = X_test that should be identified correctly to be considered as a target
+        min_num_accurate: the number of elements in the holdout set that must be identified correctly. <= |X_holdout|
     output:
         target: a numpy array  with all 0's expect a 1 at the correct index
     """
@@ -51,7 +51,7 @@ def computeAlgorithmicBias(target, pD_vector):
 
     #len(target) = size of search space
     # k / len(target) = probability of success when uniformly randomly sampling
-    algorithmicBias = np.sum(target * pD_vector) - (k / len(target))
+    algorithmicBias = np.dot(target, pD_vector) - (k / len(target)) # np.sum(target * pD_vector) - (k / len(target))
     return algorithmicBias
 
 

@@ -111,7 +111,7 @@ if __name__ == "__main__":
         sys.exit("Usage error: require dataset name, size of holdout set, model to test, and input model number")
     
     # update trial number
-    logs = os.listdir("logs")
+    logs = os.listdir("models") #models/results
     try:
         extract_numbs = "[0-9]"
         existing_files = [re.findall(extract_numbs, x) for x in logs]
@@ -212,8 +212,8 @@ if __name__ == "__main__":
         print("Running all")
         #TODO: implement thing to run all models
     
-    trial_mode = "inference"
-    model_num = sys.argv[4]
+    trial_mode = "training"
+    model_num = sys.argv[4] # which trial number to look for model in
 
     if trial_mode == "training":
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
