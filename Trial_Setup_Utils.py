@@ -41,7 +41,7 @@ def model_training_loop(model, model_name, metric_range, metric_type,
     for i in metric_range:
         print(f"Training {model_name} with {i} {metric_type}")
         trial_start = time()
-        saving_dir = f"models/trial{model_num}/{model_name}{i}"
+        saving_dir = f"models/model{model_num}/{model_name}{i}"
         maybe_mkdir(".", saving_dir) # make folder to store the models
         model_iter = model(i) # classifier
         model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], saving_dir, dataset_info, holdout_size=None, num_holdouts=0)
@@ -76,11 +76,11 @@ def model_load_loop(model, model_name:str, metric_range:tuple, metric_type:str,
     for i in metric_range:
         print(f"Starting result {result_num} using models from model {model_name} with {i} {metric_type}")
         trial_start = time()
-        maybe_mkdir(".", f"results/trial{result_num}/model{model_num}/{model_name}{i}") # make folder to store the LDMs
+        maybe_mkdir(".", f"results/trial{result_num}") # make folder to store the LDMs
         model_iter = model(i) # classifier
-        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], f"models/trial{model_num}/{model_name}{i}", dataset_info, holdout_size, num_holdouts)
+        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], f"models/model{model_num}/{model_name}{i}", dataset_info, holdout_size, num_holdouts)
         model_generator.getN_LDM_Pf(dataset_info["X_test"], dataset_info["y_test"], num_dataset, num_repeat, 0.15, from_download= True)
-        model_generator.save_state(f"results/trial{result_num}/model{model_num}/{model_name}{i}/trial{model_num}_{model_name}{i}.json", f"{model_name}{i}", dataset_info["dataset_name"])
+        model_generator.save_state(f"results/trial{result_num}/model{model_num}_{model_name}{i}.json", f"{model_name}{i}", dataset_info["dataset_name"])
         trial_end = time()
         print(f"{model_name} with {i} {metric_type} finished. Time elapsed: {(trial_end - trial_start)/60}.")
 

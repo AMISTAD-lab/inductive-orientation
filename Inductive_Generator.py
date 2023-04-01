@@ -228,6 +228,6 @@ class Inductive_Generator_Decoder(json.JSONDecoder):
         json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
 
     def object_hook(self, obj):
-      obj["LDM"] = np.asarray(obj["LDM"])
-      obj["PD"] = np.asarray(obj["PD"])
+      obj["LDMs"] = np.asarray(obj["LDMs"])
+      obj["PDs"] = np.asarray(obj["PDs"])
       return obj

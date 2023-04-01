@@ -9,9 +9,14 @@ import json
 import Inductive_Generator
 import os
 import pandas as pd
+import pdb
+def getNTargets(y_tests, min_num_accurate, classes=[0,1]):
+    targets = []
+    for y_test in y_tests:
+        targets.append(getTarget(y_test, min_num_accurate, classes))
+    return targets
 
-
-def getTarget(X_test, y_test, min_num_accurate, classes=[0,1]):
+def getTarget(y_test, min_num_accurate, classes=[0,1]):
     """
     getTarget produces a numpy array with all 0's execept a 1 at the index representing the correct sequence of labeling/
     inputs:
@@ -22,10 +27,10 @@ def getTarget(X_test, y_test, min_num_accurate, classes=[0,1]):
     output:
         target: a numpy array  with all 0's expect a 1 at the correct index
     """
-    y_test = y_test.astype("int")
-    num_holdout_samples = len(X_test)
-    all_labels = np.array(list(itertools.product(classes, repeat=num_holdout_samples)))
-    testForCorrectLabels = all_labels == y_test
+    y_test = y_test.astype("int") # true holdout set labeling
+    num_holdout_samples = len(y_test)
+    all_labels = np.array(list(itertools.product(classes, repeat=num_holdout_samples))) # all possible holdout set labelings of holdout set(??)
+    testForCorrectLabels = all_labels == y_test # creates boolean 2D array of whether or not each entry matches y_test
     # print("all_labels: ", all_labels)
     # print("y_test: ", y_test)
     # print("testForCorrectLabels: ", testForCorrectLabels)
@@ -136,7 +141,7 @@ def varianceUpToN(list_of_PD):
     return variance_per_run
 
 
-def singleAnalysis(file, target = None):
+def singleAnalysis(saved_state, target = None):
     '''
     singleAnalysis calculates Bias, Entropic Expressivity, and Algorithmic Capacity for a model
     inputs:
@@ -144,24 +149,46 @@ def singleAnalysis(file, target = None):
         target: the target vector to evaluate the model. If not given, then
                 the function will not calculate Bias
     '''
-    print("Current file: ", file)
-    analytics = []
-    with open(file) as logs:
-        saved_state = json.loads(logs.read(), cls = Inductive_Generator.Inductive_Generator_Decoder)
-        if type(target) != type(None):
-            bias = computeAlgorithmicBias(target, saved_state["PD"])
-            print(bias)
-            analytics.append(bias)
+    #print("Current file: ", file)
+    bias = np.array([])
+    expressivity = np.array([])
+    capacity = np.array([])
+    for i, PD in enumerate(saved_state["PDs"]):
+
+        # append bias
+        if target is not None:
+            bias_ = computeAlgorithmicBias(target, PD)
+            print(bias_)
         else:
-            analytics.append(None)
-        # expressivity = computeEntropy(saved_state["LDM"])
-        # print(expressivity)
-        expressivity = computeEntropy(saved_state["PD"])
-        analytics.append(expressivity)
-        capacity = computeAlgorithmicCapacity(saved_state["LDM"], saved_state["PD"])
-        print(capacity)
-        analytics.append(capacity)
-    return tuple(analytics)
+            bias_ = np.nan
+        bias = np.append(bias, bias_)
+       
+        # append expressivity
+        expressivity_ = computeEntropy(PD)
+        expressivity = np.append(expressivity, expressivity_)
+
+        # append capacity
+        capacity_ = computeAlgorithmicCapacity(saved_state["LDMs"][i], PD)
+        capacity = np.append(capacity, capacity_)
+    pdb.set_trace()
+
+    return tuple([bias, expressivity, capacity])
+    # with open(file) as logs:
+    #     saved_state = json.loads(logs.read(), cls = Inductive_Generator.Inductive_Generator_Decoder)
+    #     if type(target) != type(None):
+    #         bias = computeAlgorithmicBias(target, saved_state["PD"])
+    #         print(bias)
+    #         analytics.append(bias)
+    #     else:
+    #         analytics.append(None)
+    #     # expressivity = computeEntropy(saved_state["LDM"])
+    #     # print(expressivity)
+    #     expressivity = computeEntropy(saved_state["PD"])
+    #     analytics.append(expressivity)
+    #     capacity = computeAlgorithmicCapacity(saved_state["LDM"], saved_state["PD"])
+    #     print(capacity)
+    #     analytics.append(capacity)
+    #return tuple(analytics)
         
 
 def runAnalysis(file, target=None, name_column=[], bias_column=[], entropic_expressivity_column = [], algorithmic_capacity_column = []):
