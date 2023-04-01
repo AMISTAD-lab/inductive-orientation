@@ -106,27 +106,29 @@ def maybe_mkdir(basepath, folder_name):
         exist_path = current_path
     return exist_path
 
+def next_trial_num(dir, default):
+    logs = os.listdir(dir)
+    log_nums = [int(log.split("l")[1]) for log in logs]
+    if log_nums == []:
+        return default
+    else:
+        return max(log_nums) + 1
+    
 if __name__ == "__main__":
     if len(sys.argv) != 5:
         sys.exit("Usage error: require dataset name, size of holdout set, model to test, and input model number")
     
     # update trial number
-    logs = os.listdir("models") #models/results
-    try:
-        extract_numbs = "[0-9]"
-        existing_files = [re.findall(extract_numbs, x) for x in logs]
-        existing_files = list(map(lambda x: "".join(x), existing_files))
-        existing_files = [int(x) for x in existing_files if len(x) != 0]
-        TRIAL_NUM = max(existing_files)+1
-        # TRIAL_NUM = max([int(log.split("l")[1]) for log in logs])+1
-    except:
-        TRIAL_NUM = 1
+    if os.path.exists("models") == False:
+        maybe_mkdir(".", "models")
+    current_model_num = next_trial_num("models", default=1)
 
-    # make new folders for this trial
-    # os.mkdir(os.path.join("logs", f"trial{TRIAL_NUM}")) # logs stores saved models, holdout sets, which dataset parts they were trained on
-    # os.mkdir(os.path.join("results", f"trial{TRIAL_NUM}")) # results stores LDM and Pd (inductive orientation vector)
-
+    if os.path.exists("results") == False:
+        maybe_mkdir(".", "results")
+    current_result_num = next_trial_num("results", default=1)
     print(sys.argv)
+
+    # load and configure dataset
     if sys.argv[1] in "Abalone":
         dataset = "Abalone.csv"
     elif sys.argv[1] in "Bank_Marketing":
@@ -146,24 +148,18 @@ if __name__ == "__main__":
     elif sys.argv[1] in "Wine_Quality":
         dataset = "Wine_Quality.csv"
     elif sys.argv[1] in "Semi_Random":
-        dataset = "Semi_Random"
+        dataset = "SemiRandom.csv"
     else:
         sys.exit("We don't have that dataset. All that we have is ", os.listdir("datasets"))
     
-    if dataset == "Semi_Random":  
-        dataset_name = "SemiRandom"       
-        X, y = generate_fully_synethic(4, 100, 100, 2)
-    else:
-        dataset_name = dataset.split(".")[0]
-        dataset = os.path.join("datasets", dataset)
-        data = pd.read_csv(dataset)
-        X = data[data.columns[:-1]]
-        X = X.iloc[:,:].values
-        y = data[data.columns[-1]]
-        y = y.values
+    dataset_name = dataset.split(".")[0]
+    dataset = os.path.join("datasets", dataset)
+    data = pd.read_csv(dataset)
+    X = data[data.columns[:-1]]
+    X = X.iloc[:,:].values
+    y = data[data.columns[-1]]
+    y = y.values
     
-    
-    # ----- NEW IMPORTANT CHANGES ------
     #TODO: new input of test_train_ratio --> test section of data will be pool for randomly selected holdout sets
     test_train_ratio = 0.20 # set for now
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=test_train_ratio, random_state=42)
@@ -212,19 +208,19 @@ if __name__ == "__main__":
         print("Running all")
         #TODO: implement thing to run all models
     
-    trial_mode = "training"
+    trial_mode = "inference"
     model_num = sys.argv[4] # which trial number to look for model in
 
     if trial_mode == "training":
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
         model_training_loop(model=model, model_name=model_name, metric_range=range(1,7), 
-                        metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=TRIAL_NUM, 
+                        metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=current_model_num, 
                         dataset_info=dataset_info, proportion_of_dataset=0.15)
     elif trial_mode == "inference":
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
         model_load_loop(model=model, model_name=model_name, metric_range=range(1,7), 
                         metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=model_num,
-                        dataset_info=dataset_info, result_num=TRIAL_NUM, num_holdouts=2, holdout_size=5)
+                        dataset_info=dataset_info, result_num=current_result_num, num_holdouts=2, holdout_size=5)
     else:
         print("Not yet implemented")
         #TODO: implement non-looping generic setup

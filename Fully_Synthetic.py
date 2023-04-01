@@ -3,6 +3,7 @@
 # 2 to 12 dimensions; size of dataset vary between 100 to 5000 samples
 
 import numpy as np
+import pandas
 
 def generate_fully_synethic(n_features, n_samples, max_value, num_classes, seed=42):
     """
@@ -26,3 +27,7 @@ def generate_fully_synethic(n_features, n_samples, max_value, num_classes, seed=
 #     x_data = rng.integers(low=0, high=max_value, size=(n_samples, n_features))
 #     y_data = rng.integers(low=0, high=num_classes, size=n_samples)
     
+if __name__ == "__main__":
+    X, y = generate_fully_synethic(4, 2000, 100, 2, seed=42)
+    df = pandas.DataFrame({"x0":X[:,0], "x1":X[:,1], "x2":X[:,2], "x3":X[:,3], "y":y})
+    df.to_csv("datasets/SemiRandom.csv", index=False)

@@ -115,6 +115,9 @@ class Inductive_Generator:
 
       def generateLDMHelper(dataset_idx):
         """Generates LDM matrix"""
+        # based on the dataset_idx, we may need to change a seed
+        if (dataset_idx%50 == 0):
+          self.data_generator.set_seed(dataset_idx//50)
         subset_X, subset_y = dg_method(num_entries, do_replace=do_replace) # getting training subset
         
         def generatePf(repeat_idx):
