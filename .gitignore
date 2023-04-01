@@ -8,3 +8,4 @@ logs
 *.pdf
 *.csv
 *.pkl
+*json
