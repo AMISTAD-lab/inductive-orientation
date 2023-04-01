@@ -56,13 +56,16 @@ def generate_holdout_set(holdout_size, X_test, y_test, do_replace:bool = True, s
   holdout_set_y = np.array([y_test[i] for i in indices])
   return holdout_set_X, holdout_set_y
 
-def generateN_holdout_sets(num_holdouts, holdout_size,  X_test, y_test, do_replace:bool = True, seed_num=42):
+def generateN_holdout_sets(num_holdouts, holdout_size,  X_test, y_test, holdout_set_seeds, do_replace:bool = True):
   """Generate num_holdouts holdout sets from X_tests of holdout_size. Returns two 2D arrays of each holdout set (each of x and y)"""
   holdout_sets_x = []
   holdout_sets_y = []
 
+  if len(holdout_set_seeds) != num_holdouts:
+    raise Exception("Must have holdout_set_seeds have the length of num holdouts")
+
   for i in range(num_holdouts): # generate and append holdout sets
-    new_set_x, new_set_y = generate_holdout_set(holdout_size, X_test, y_test, do_replace, seed_num)
+    new_set_x, new_set_y = generate_holdout_set(holdout_size, X_test, y_test, do_replace, holdout_set_seeds[i]) # CHANGED HERE FROM SINGLE SEED TO MULTIPLE HOLDOUT SET SEEDS
     holdout_sets_x.append(new_set_x)
     holdout_sets_y.append(new_set_y)
 
