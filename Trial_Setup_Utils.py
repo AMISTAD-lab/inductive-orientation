@@ -23,7 +23,7 @@ import sys
 
 # model specific generator functions
 def decision_tree_max_depth(max_depth):
-    return DecisionTreeClassifier(max_depth=max_depth)
+    return DecisionTreeClassifier(max_depth=max_depth) #random_state=42)
 
 def knn_n_neighbors(n_neigbors):
     return KNeighborsClassifier(n_neighbors =n_neigbors)
@@ -44,7 +44,7 @@ def model_training_loop(model, model_name, metric_range, metric_type,
         saving_dir = f"models/trial{model_num}/{model_name}{i}"
         maybe_mkdir(".", saving_dir) # make folder to store the models
         model_iter = model(i) # classifier
-        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], saving_dir, dataset_info, holdout_size=None, num_holdouts=None)
+        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], saving_dir, dataset_info, holdout_size=None, num_holdouts=0)
         model_generator.get_LDM(None, num_dataset, num_repeat, proportion_of_dataset, "generate_subset", from_download=False)
     
         trial_end = time()
@@ -107,8 +107,8 @@ def maybe_mkdir(basepath, folder_name):
     return exist_path
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
-        sys.exit("Usage error: require dataset name, size of holdout set, model to test, and input model number")
+    if len(sys.argv) != 6 and len(sys.argv) != 5:
+        sys.exit("Usage error: require dataset name, size of holdout set, model to test, input model number, and whether to train/inference")
     
     # update trial number
     logs = os.listdir("models") #models/results
@@ -164,6 +164,7 @@ if __name__ == "__main__":
     
     
     # ----- NEW IMPORTANT CHANGES ------
+
     #TODO: new input of test_train_ratio --> test section of data will be pool for randomly selected holdout sets
     test_train_ratio = 0.20 # set for now
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=test_train_ratio, random_state=42)
@@ -212,8 +213,12 @@ if __name__ == "__main__":
         print("Running all")
         #TODO: implement thing to run all models
     
-    trial_mode = "training"
-    model_num = sys.argv[4] # which trial number to look for model in
+    trial_mode = sys.argv[4]
+    if trial_mode == "inference":
+        model_num = sys.argv[5] # which trial number to look for model in
+ 
+    
+        
 
     if trial_mode == "training":
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}

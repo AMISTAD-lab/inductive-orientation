@@ -35,6 +35,9 @@ class Inductive_Generator:
     self.num_holdouts = num_holdouts # number of holdout sets randomly gathered from X_test
     self.data_generator = Data_Generator.Data_Generator(self.X_train, self.y_train, 42, self.X_fixed, self.y_fixed)
 
+    self.holdout_set_seeds = list(range(num_holdouts)) # current way of getting holdout sets
+    self.starting_seed = 0
+
     self.LDMs = []
     self.PDs = []
 
@@ -74,7 +77,7 @@ class Inductive_Generator:
   def getN_LDM_Pf(self, X_test, y_test, num_datasets, num_repeat, proportion_of_dataset, from_download = False, do_replace=True):
     """Gets self.num_holdouts for each holdout set --> gets LDM and Pf (HASN'T BEEN TESTED)"""
     holdout_sets_x, holdout_sets_y = Data_Generator.generateN_holdout_sets(self.num_holdouts, self.holdout_size,
-                                                                            X_test, y_test, do_replace = True)
+                                                                            X_test, y_test, do_replace = True, holdout_set_seeds = self.holdout_set_seeds)
     #FIXME: do we need holdout_sets_y or nah
     #TODO: download holdout_sets in json
 
@@ -115,6 +118,10 @@ class Inductive_Generator:
 
       def generateLDMHelper(dataset_idx):
         """Generates LDM matrix"""
+        # based on dataset_idx, need to change seed
+        if dataset_idx%50 == 0:
+          self.data_generator.set_seed =(dataset_idx//50 + self.starting_seed)
+
         subset_X, subset_y = dg_method(num_entries, do_replace=do_replace) # getting training subset
         
         def generatePf(repeat_idx):
@@ -198,13 +205,13 @@ class Inductive_Generator:
     #State = {"model": self.model_name, "dataset": self.dataset_name, "LDM":self.LDM, "PD": self.PD}
     
     # TODO: save seeds here
-    State = {"model": self.model_name, "dataset": self.dataset_name, "LDMs":self.LDMs, "PDs": self.PDs} # new state, TODO: add place to save holdout sets and X_test
+    State = {"model": self.model_name, "dataset": self.dataset_name, "holdout_set_seeds" : self.holdout_set_seeds, "subset_starting_seed" : self.starting_seed, "LDMs":self.LDMs, "PDs": self.PDs} # new state, TODO: add place to save holdout sets and X_test
     with open(file, "a") as logs:
       json.dump(State, fp=logs, cls=Inductive_Generator_Encoder)
 
 class Inductive_Generator_Encoder(json.JSONEncoder):
   """
-  Creates json representation of LDM and P_d. Neccessary for serializing numpy arrays.
+  Creates json representation of LDM and P_d. Necessary for serializing numpy arrays.
   """
   def default(self, obj):
     if isinstance(obj, np.integer):
