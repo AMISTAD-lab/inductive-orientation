@@ -141,24 +141,24 @@ def varianceUpToN(list_of_PD):
     return variance_per_run
 
 
-def singleAnalysis(saved_state, target = None):
+def singleAnalysis(saved_state, targets):
     '''
     singleAnalysis calculates Bias, Entropic Expressivity, and Algorithmic Capacity for a model
     inputs:
-        file: the path to the json file storing the model's LDM and PD
-        target: the target vector to evaluate the model. If not given, then
-                the function will not calculate Bias
+        file: the path to the json file storing the model's LDMs and PDs
+        target: a list of target vectors to evaluate the model, each has corresponding PD and LDM. 
+        If not given, then the function will not calculate Bias
     '''
     #print("Current file: ", file)
     bias = np.array([])
     expressivity = np.array([])
     capacity = np.array([])
+    
     for i, PD in enumerate(saved_state["PDs"]):
-
+        target = targets[i] # each PD has corresponding target
         # append bias
         if target is not None:
             bias_ = computeAlgorithmicBias(target, PD)
-            print(bias_)
         else:
             bias_ = np.nan
         bias = np.append(bias, bias_)
@@ -170,7 +170,7 @@ def singleAnalysis(saved_state, target = None):
         # append capacity
         capacity_ = computeAlgorithmicCapacity(saved_state["LDMs"][i], PD)
         capacity = np.append(capacity, capacity_)
-    pdb.set_trace()
+    #pdb.set_trace()
 
     return tuple([bias, expressivity, capacity])
     # with open(file) as logs:
@@ -191,22 +191,25 @@ def singleAnalysis(saved_state, target = None):
     #return tuple(analytics)
         
 
-def runAnalysis(file, target=None, name_column=[], bias_column=[], entropic_expressivity_column = [], algorithmic_capacity_column = []):
+def runAnalysis(file:str, targets:list=None, name_column=[], bias_column=[], entropic_expressivity_column = [], algorithmic_capacity_column = []):
     '''
     runAnalysis allows multiple calls to singleAnalysis
     inputs:
         file: the path to either a json file or a directry containing all json files
-        target: the target vector to evaluate the model. If not given, then
+        target: the list of target vectors to evaluate the model. If not given, then
                 the function will not calculate Bias
     '''
     if file[-4:] == "json":
-        return singleAnalysis(file, target)
+        return singleAnalysis(file, targets)
 
     else:
         logs = os.listdir(file)
         logs = [os.path.join(file, log) for log in logs]
+        pdb.set_trace()
         for log_file in logs:
-            bias, entropic_expressivity, algorithmic_capacity = singleAnalysis(log_file, target)
+            with open(log_file) as log:
+                saved_state = json.loads(log.read(), cls = Inductive_Generator.Inductive_Generator_Decoder)
+            bias, entropic_expressivity, algorithmic_capacity = singleAnalysis(saved_state, targets)
             name_column.append(log_file.split("/")[-1].split(".")[0])
             bias_column.append(bias)
             entropic_expressivity_column.append(entropic_expressivity)

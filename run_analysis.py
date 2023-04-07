@@ -23,8 +23,10 @@ if __name__ == "__main__":
     SIZE_HOLDOUT = int(sys.argv[3])
     SIZE_TARGET = int(sys.argv[4])
     
+    
     if SIZE_TARGET > SIZE_HOLDOUT:
         sys.exit("target set must be a subset of the holdout set.")
+
     with open(os.path.join(f"results/trial{TRIAL_NUM}", os.listdir(f"results/trial{TRIAL_NUM}")[0])) as logs:
         SAVED_STATE = json.loads(logs.read(), cls = Inductive_Generator.Inductive_Generator_Decoder)
         DATASET_NAME = SAVED_STATE["dataset"] + ".csv"
@@ -55,15 +57,17 @@ if __name__ == "__main__":
                                                                             holdout_set_seeds = HOLDOUT_SET_SEEDS)
 
 
-
-    # TODO: change when you implement multiple seed thingy for holdout sets --> read from .json
+    # Gather target sets
     targets = [] 
     for holdout_set_y in holdout_sets_y:
         targets.append(Algorithmic_Analysis.getTarget(holdout_set_y, SIZE_TARGET, [0,1]))
     
-    for target in targets:
-        summary = Algorithmic_Analysis.singleAnalysis(SAVED_STATE, target=target)
+    # summary = []
+ 
+    summary = Algorithmic_Analysis.singleAnalysis(saved_state= SAVED_STATE,targets=targets)
+    longer_summary = Algorithmic_Analysis.runAnalysis("results/trial1",targets)
+    #Algorithmic_Analysis.singleAnalysis()
         #summary.sort_values(by=['model_name'])
-        #summary.to_csv(f"trial{TRIAL_NUM}_target{SIZE_TARGET}.csv")
+        #summary.to_pickle(f"trial{TRIAL_NUM}_target{SIZE_TARGET}.csv")
 
-pdb.set_trace()
+#pdb.set_trace()
