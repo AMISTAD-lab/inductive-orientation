@@ -6,6 +6,7 @@ import seaborn as sns
 from matplotlib.ticker import MaxNLocator
 from functools import reduce
 import numpy as np
+import pickle
 
 def all_plots(path, analysis_type, saving_path, plot_info):
     df = pd.read_csv(path)
@@ -64,11 +65,17 @@ def individual_plot(path, saving_path, model_name, plot_info):
 
 
 def individual_plot_mult(path, saving_path, model_name, plot_info):
-    # might need to change to
-    df = pd.read_csv(path)
-    # pickle.load(path)
-    df = df[df["model_name"].apply(lambda x: model_name in x)] # row of table corresponding to the model
+    """
+    
+    """
+    df = pd.read_pickle(path)
+    # throw away all the models that doesn't have model_name in its name
+    df = df[df["model_name"].apply(lambda x: model_name in x)] 
+
+    # throw away the part of the name that corresponds to the model trial number
     df["model_name"] = df["model_name"].apply(lambda x: x.split("_")[1])
+
+    # changes the model name to be a number respresenting its parameter
     df["model_name"] = df["model_name"].apply(lambda x: re.split('(\d+)',x)[-2])
     df["model_name"]=df["model_name"].astype("int8")
     fig = plt.figure()
@@ -79,10 +86,13 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
         metric_std = metric_type + "_std"
         df[metric_mean] = df[metric_type].apply(lambda x: np.mean(x))
         df[metric_std] = df[metric_type].apply(lambda x: np.std(x))
-        sns.lineplot(ax=ax1, data=df, x="model_name", y=metric_type)
-        ax1.errorbar(df.index, df[metric_mean], yerr=df[metric_std], fmt='-o')
-        legend[metric_type] = i+1
-    ax1.legend(legend)
+        sns.lineplot(ax=ax1, data=df, x="model_name", y=metric_mean)
+        ax1.fill_between(df["model_name"], df[metric_mean] - df[metric_std], df[metric_mean] + df[metric_std], alpha=0.2)
+
+    ax1.legend({"algorithmic_capacity_mean":1, "algorithmic_capacity_std":2,
+                "entropic_expressivity_mean":3,"entropic_expressivity_std":4,
+                "algorithmic_mean":5, "algorithmic_std":6})
+
     ax1.set_title(plot_info["title"])
     ax1.set_xlabel(plot_info["xlabel"])
     ax1.set_ylabel(plot_info["ylabel"])
@@ -119,8 +129,8 @@ if __name__ == "__main__":
     # individual_plot("./../trial33_target8.csv", "./../trial33_target8_DecisionTree.pdf", "DecisionTree", plot_info)
 
     # Random Forest
-    plot_info = {"title": "Random Forests", "xlabel": "number of estimators", "ylabel":""}
-    individual_plot("./../trial36_target8.csv", "./../trial36_target8_RandomForest.pdf", "RandomForest", plot_info)
+    plot_info = {"title": "Decision Tree", "xlabel": "Depth", "ylabel":""}
+    individual_plot_mult("./../analysis/trial1/EEG.pkl", "./../analysis/trial1/EEG.pdf", "Decision Tree", plot_info)
 
     # plot_info = {"title": "All Models on Shoppers Intention Dataset", "xlabel": "", "ylabel":""}
     # all_plots("./../trial19_target8.csv", "algorithmic_capacity", "./../plots/trial19_target8_capacity.pdf", plot_info)
