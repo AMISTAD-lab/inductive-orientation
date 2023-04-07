@@ -5,6 +5,7 @@ import re
 import seaborn as sns
 from matplotlib.ticker import MaxNLocator
 from functools import reduce
+import numpy as np
 
 def all_plots(path, analysis_type, saving_path, plot_info):
     df = pd.read_csv(path)
@@ -62,6 +63,32 @@ def individual_plot(path, saving_path, model_name, plot_info):
     plt.show()
 
 
+def individual_plot_mult(path, saving_path, model_name, plot_info):
+    # might need to change to
+    df = pd.read_csv(path)
+    # pickle.load(path)
+    df = df[df["model_name"].apply(lambda x: model_name in x)] # row of table corresponding to the model
+    df["model_name"] = df["model_name"].apply(lambda x: x.split("_")[1])
+    df["model_name"] = df["model_name"].apply(lambda x: re.split('(\d+)',x)[-2])
+    df["model_name"]=df["model_name"].astype("int8")
+    fig = plt.figure()
+    ax1 = fig.add_subplot()
+    legend = {}
+    for i, metric_type in enumerate(["algorithmic_capacity", "entropic_expressivity", "algorithmic_bias"]):
+        metric_mean = metric_type + "_mean"
+        metric_std = metric_type + "_std"
+        df[metric_mean] = df[metric_type].apply(lambda x: np.mean(x))
+        df[metric_std] = df[metric_type].apply(lambda x: np.std(x))
+        sns.lineplot(ax=ax1, data=df, x="model_name", y=metric_type)
+        ax1.errorbar(df.index, df[metric_mean], yerr=df[metric_std], fmt='-o')
+        legend[metric_type] = i+1
+    ax1.legend(legend)
+    ax1.set_title(plot_info["title"])
+    ax1.set_xlabel(plot_info["xlabel"])
+    ax1.set_ylabel(plot_info["ylabel"])
+    plt.xticks(df["model_name"])
+    plt.savefig(saving_path)
+    plt.show()
 # path_to_log = "./../trial21_target8.csv"
 # df = pandas.read_csv(path_to_log)
 # df = df[df["model_name"].apply(lambda x: "RandomForest" in x)]
