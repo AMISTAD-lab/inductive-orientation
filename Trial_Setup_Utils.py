@@ -115,20 +115,24 @@ def next_trial_num(dir, default):
         return max(log_nums) + 1
     
 if __name__ == "__main__":
-    if len(sys.argv) != 7 and len(sys.argv) != 6:
+    if len(sys.argv) != 9 and len(sys.argv) != 8:
         sys.exit("Usage error: 1. require dataset name, \n\
                                 2. number of holdout sets, \n\
                                 3. size of holdout set, \n\
                                 4. model to test, \n\
                                 5. whether to train/inference \n\
-                                6. input model number, \n")
+                                6. lower range of metrics to test \n\
+                                7. upper range of metrics to test \n\
+                                8. input model number, \n")
     argv_dataset = sys.argv[1]
     num_holdout_sets = int(sys.argv[2])
     holdout_set_size = int(sys.argv[3])
     argv_model = sys.argv[4]
     trial_mode = sys.argv[5]
     if trial_mode == "inference":
-        model_num = sys.argv[6] # which model to load
+        model_num = sys.argv[8] # which model to load
+    lower_range = int(sys.argv[6])
+    upper_range = int(sys.argv[7])    
 
     
     # update trial number
@@ -225,12 +229,12 @@ if __name__ == "__main__":
     
     if trial_mode == "training":
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
-        model_training_loop(model=model, model_name=model_name, metric_range=range(1,3), 
+        model_training_loop(model=model, model_name=model_name, metric_range=range(lower_range, upper_range), 
                         metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=current_model_num, 
                         dataset_info=dataset_info, proportion_of_dataset=0.15)
     elif trial_mode == "inference":
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
-        model_load_loop(model=model, model_name=model_name, metric_range=range(1,3), 
+        model_load_loop(model=model, model_name=model_name, metric_range=range(lower_range,upper_range), 
                         metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=model_num,
                         dataset_info=dataset_info, result_num=current_result_num, num_holdouts=num_holdout_sets, holdout_size=holdout_set_size)
     else:

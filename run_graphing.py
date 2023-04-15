@@ -8,6 +8,7 @@ from functools import reduce
 import numpy as np
 import pickle
 import sys
+import pdb
 
 def all_plots(path, analysis_type, saving_path, plot_info):
     df = pd.read_csv(path)
@@ -69,12 +70,15 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
     """
     
     """
+    #pdb.set_trace()
+    print("path:", path)
+    print("saving_path", saving_path)
     df = pd.read_pickle(path)
     # throw away all the models that doesn't have model_name in its name
     df = df[df["model_name"].apply(lambda x: model_name in x)] 
 
     # throw away the part of the name that corresponds to the model trial number
-    df["model_name"] = df["model_name"].apply(lambda x: x.split("_")[1])
+    df["model_name"] = df["model_name"].apply(lambda x: x.split("_")[-1])
 
     # changes the model name to be a number respresenting its parameter
     df["model_name"] = df["model_name"].apply(lambda x: re.split('(\d+)',x)[-2])
@@ -118,11 +122,11 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
 # plt.xticks(df["model_name"])
 
 if __name__ == "__main__":
-    print(len(sys.argv) )
-    if len(sys.argv) != 5:
+
+    if len(sys.argv) !=6:
         sys.exit("Usage error: 1. require dataset name, \n\
                                2. trial number, \n\
-                               3. model to test (string), \n\
+                               3. plot title, \n\
                                4. x-axis label \n\
                                5. input model number, \n")
     argv_dataset = sys.argv[1]
@@ -147,7 +151,7 @@ if __name__ == "__main__":
     # Random Forest
     plot_info = {"title": argv_model, "xlabel": x_label, "ylabel": y_label}
     # individual_plot_mult("./../analysis/trial1/EEG.pkl", "./../analysis/trial1/EEG.pdf", "Decision Tree", plot_info)
-    individual_plot_mult(f"./../analysis/trial{trial_num}/{argv_dataset}.pkl", "./../analysis/trial{trial_num}/{argv_dataset}.pdf", argv_model, plot_info)
+    individual_plot_mult(f"./analysis/trial{trial_num}/{argv_dataset}.pkl", f"./analysis/trial{trial_num}/{argv_dataset}.pdf", "Decision Tree", plot_info)
 
     # plot_info = {"title": "All Models on Shoppers Intention Dataset", "xlabel": "", "ylabel":""}
     # all_plots("./../trial19_target8.csv", "algorithmic_capacity", "./../plots/trial19_target8_capacity.pdf", plot_info)

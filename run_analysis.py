@@ -14,6 +14,7 @@ import pandas as pd
 import sys
 import math
 import pdb
+import Trial_Setup_Utils
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
@@ -64,5 +65,8 @@ if __name__ == "__main__":
 
 
     summary = Algorithmic_Analysis.singleAnalysis(saved_state= SAVED_STATE,targets=targets) # oblig
-    longer_summary = Algorithmic_Analysis.runAnalysis("results/trial1",targets)
-    longer_summary.to_pickle("analysis/trial1/EEG.pkl")
+    longer_summary = Algorithmic_Analysis.runAnalysis(f"results/trial{TRIAL_NUM}",targets)
+    Trial_Setup_Utils.maybe_mkdir("./", f"analysis/trial{TRIAL_NUM}")
+    longer_summary.to_pickle(f"analysis/trial{TRIAL_NUM}/{DATASET_NAME[:-4]}.pkl")
+
+    
