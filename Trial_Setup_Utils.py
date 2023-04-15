@@ -115,8 +115,21 @@ def next_trial_num(dir, default):
         return max(log_nums) + 1
     
 if __name__ == "__main__":
-    if len(sys.argv) != 6 and len(sys.argv) != 5:
-        sys.exit("Usage error: require dataset name, size of holdout set, model to test, input model number, and whether to train/inference")
+    if len(sys.argv) != 7 and len(sys.argv) != 6:
+        sys.exit("Usage error: 1. require dataset name, \n\
+                                2. number of holdout sets, \n\
+                                3. size of holdout set, \n\
+                                4. model to test, \n\
+                                5. whether to train/inference \n\
+                                6. input model number, \n")
+    argv_dataset = sys.argv[1]
+    num_holdout_sets = int(sys.argv[2])
+    holdout_set_size = int(sys.argv[3])
+    argv_model = sys.argv[4]
+    trial_mode = sys.argv[5]
+    if trial_mode == "inference":
+        model_num = sys.argv[6] # which model to load
+
     
     # update trial number
     if os.path.exists("models") == False:
@@ -129,25 +142,25 @@ if __name__ == "__main__":
     print(sys.argv)
 
     # load and configure dataset
-    if sys.argv[1] in "Abalone":
+    if argv_dataset in "Abalone":
         dataset = "Abalone.csv"
-    elif sys.argv[1] in "Bank_Marketing":
+    elif argv_dataset in "Bank_Marketing":
         dataset = "Bank_Marketing.csv"
-    elif sys.argv[1] in "Car_Evaluation":
+    elif argv_dataset in "Car_Evaluation":
         dataset = "Car_Evaluation.csv"
-    elif sys.argv[1] in "EEG_Eye_State.csv":
+    elif argv_dataset in "EEG_Eye_State.csv":
         dataset = "EEG_Eye_State.csv"
-    elif sys.argv[1] in "Letter_Recognition":
+    elif argv_dataset in "Letter_Recognition":
         dataset = "Letter_Recognition.csv"
-    elif sys.argv[1] in "Obesity":
+    elif argv_dataset in "Obesity":
         dataset = "Obesity.csv"
-    elif sys.argv[1] in "Shopper_Intention":
+    elif argv_dataset in "Shopper_Intention":
         dataset = "Shopper_Intention.csv"        
-    elif sys.argv[1] in "Spam":
+    elif argv_dataset in "Spam":
         dataset = "Spam.csv"
-    elif sys.argv[1] in "Wine_Quality":
+    elif argv_dataset in "Wine_Quality":
         dataset = "Wine_Quality.csv"
-    elif sys.argv[1] in "Semi_Random":
+    elif argv_dataset in "Semi_Random":
         dataset = "SemiRandom.csv"
     else:
         sys.exit("We don't have that dataset. All that we have is ", os.listdir("datasets"))
@@ -159,6 +172,7 @@ if __name__ == "__main__":
     X = X.iloc[:,:].values
     y = data[data.columns[-1]]
     y = y.values
+
     
     #TODO: new input of test_train_ratio --> test section of data will be pool for randomly selected holdout sets
     test_train_ratio = 0.20 # set for now
@@ -171,62 +185,56 @@ if __name__ == "__main__":
 
     # choose which model to test
     is_loop= False
-    if sys.argv[3].upper() in "DECISION_TREE":
+    if argv_model.upper() in "DECISION_TREE":
         model = decision_tree_max_depth
         model_name = "Decision Tree" # TODO: implement enum system for model names so we don't get into annoying errors
         metric_type = "Depth"
         is_loop = True # whether model must loop over metric
-    elif sys.argv[3].upper() in "KNN":
+    elif argv_model.upper() in "KNN":
         model = knn_n_neighbors
         model_name = "KNN"
         metric_type = "Neighbors"
         is_loop = True
-    elif sys.argv[3].upper() in "RANDOM_FOREST":
+    elif argv_model.upper() in "RANDOM_FOREST":
         model = randomForestSetupDepth
         model_name = "Random Forest"
         metric_type = "Estimators"
         is_loop = True
-    elif sys.argv[3].upper() in "ADABOOST":
+    elif argv_model.upper() in "ADABOOST":
         model = adaboostSetup
         model_name = "Adaboost"
-    elif sys.argv[3].upper() in "QDA":
+    elif argv_model.upper() in "QDA":
         model = adaboostSetup
         model_name = "QDA"
-    elif sys.argv[3].upper() in "GAUSSIAN":
+    elif argv_model.upper() in "GAUSSIAN":
         model = gaussianProcessSetup
         model_name = "Gaussian"
-    elif sys.argv[3].upper() in "NAIVE_BAYES":
+    elif argv_model.upper() in "NAIVE_BAYES":
         model = naiveBayesClassifierSetup
         model_name = "Naive Bayes"
-    elif sys.argv[3].upper() in "LINEAR_SVC":
+    elif argv_model.upper() in "LINEAR_SVC":
         model = linearSVCSetup
         model_name = "Linear SVC"
-    elif sys.argv[3].upper() in "LOGISTIC_REGRESSION":
+    elif argv_model.upper() in "LOGISTIC_REGRESSION":
         model = logisticRegressionSetup
         model_name = "Logistic Regression"
     else:
         print("Running all")
         #TODO: implement thing to run all models
     
-    trial_mode = sys.argv[4]
-    if trial_mode == "inference":
-        model_num = sys.argv[5] # which trial number to look for model in
- 
     
-        
-
     if trial_mode == "training":
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
-        model_training_loop(model=model, model_name=model_name, metric_range=range(1,7), 
+        model_training_loop(model=model, model_name=model_name, metric_range=range(1,3), 
                         metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=current_model_num, 
                         dataset_info=dataset_info, proportion_of_dataset=0.15)
     elif trial_mode == "inference":
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
-        model_load_loop(model=model, model_name=model_name, metric_range=range(1,7), 
+        model_load_loop(model=model, model_name=model_name, metric_range=range(1,3), 
                         metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=model_num,
-                        dataset_info=dataset_info, result_num=current_result_num, num_holdouts=2, holdout_size=5)
+                        dataset_info=dataset_info, result_num=current_result_num, num_holdouts=num_holdout_sets, holdout_size=holdout_set_size)
     else:
-        print("Not yet implemented")
+        print("Must enter 'training' or 'inference'")
         #TODO: implement non-looping generic setup
 
 

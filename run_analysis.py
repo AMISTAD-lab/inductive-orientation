@@ -61,13 +61,8 @@ if __name__ == "__main__":
     targets = [] 
     for holdout_set_y in holdout_sets_y:
         targets.append(Algorithmic_Analysis.getTarget(holdout_set_y, SIZE_TARGET, [0,1]))
-    
-    # summary = []
- 
-    summary = Algorithmic_Analysis.singleAnalysis(saved_state= SAVED_STATE,targets=targets)
-    longer_summary = Algorithmic_Analysis.runAnalysis("results/trial1",targets)
-    #Algorithmic_Analysis.singleAnalysis()
-        #summary.sort_values(by=['model_name'])
-        #summary.to_pickle(f"trial{TRIAL_NUM}_target{SIZE_TARGET}.csv")
 
-#pdb.set_trace()
+
+    summary = Algorithmic_Analysis.singleAnalysis(saved_state= SAVED_STATE,targets=targets) # oblig
+    longer_summary = Algorithmic_Analysis.runAnalysis("results/trial1",targets)
+    longer_summary.to_pickle("analysis/trial1/EEG.pkl")

@@ -205,7 +205,7 @@ def runAnalysis(file:str, targets:list=None, name_column=[], bias_column=[], ent
     else:
         logs = os.listdir(file)
         logs = [os.path.join(file, log) for log in logs]
-        pdb.set_trace()
+        # pdb.set_trace()
         for log_file in logs:
             with open(log_file) as log:
                 saved_state = json.loads(log.read(), cls = Inductive_Generator.Inductive_Generator_Decoder)
