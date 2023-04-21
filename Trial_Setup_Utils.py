@@ -199,8 +199,13 @@ if __name__ == "__main__":
         model_name = "KNN"
         metric_type = "Neighbors"
         is_loop = True
-    elif argv_model.upper() in "RANDOM_FOREST":
+    elif argv_model.upper() in "RANDOM_FOREST_Depth":
         model = randomForestSetupDepth
+        model_name = "Random Forest"
+        metric_type = "Depth"
+        is_loop = True
+    elif argv_model.upper() in "RANDOM_FOREST_Estimator":
+        model = randomForestSetupEstimator
         model_name = "Random Forest"
         metric_type = "Estimators"
         is_loop = True

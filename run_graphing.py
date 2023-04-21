@@ -52,6 +52,7 @@ def individual_plot(path, saving_path, model_name, plot_info):
     df["model_name"] = df["model_name"].apply(lambda x: x.split("_")[1])
     df["model_name"] = df["model_name"].apply(lambda x: re.split('(\d+)',x)[-2])
     df["model_name"]=df["model_name"].astype("int8")
+    df = df.sort_values("model_name")
     fig = plt.figure()
     ax1 = fig.add_subplot()
     sns.lineplot(ax=ax1, data=df, x="model_name", y="algorithmic_capacity")
@@ -68,9 +69,10 @@ def individual_plot(path, saving_path, model_name, plot_info):
 
 def individual_plot_mult(path, saving_path, model_name, plot_info):
     """
-    
+    USE THIS ONE
+    New plot function
     """
-    #pdb.set_trace()
+    # pdb.set_trace()
     print("path:", path)
     print("saving_path", saving_path)
     df = pd.read_pickle(path)
@@ -83,12 +85,15 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
     # changes the model name to be a number respresenting its parameter
     df["model_name"] = df["model_name"].apply(lambda x: re.split('(\d+)',x)[-2])
     df["model_name"]=df["model_name"].astype("int8")
+    df = df.sort_values("model_name")
     fig = plt.figure()
     ax1 = fig.add_subplot()
     legend = {}
     for i, metric_type in enumerate(["algorithmic_capacity", "entropic_expressivity", "algorithmic_bias"]):
-        metric_mean = metric_type + "_mean"
+        metric_mean = metric_type + "_mean" # column names
         metric_std = metric_type + "_std"
+
+
         df[metric_mean] = df[metric_type].apply(lambda x: np.mean(x))
         df[metric_std] = df[metric_type].apply(lambda x: np.std(x))
         sns.lineplot(ax=ax1, data=df, x="model_name", y=metric_mean)
@@ -101,7 +106,10 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
     ax1.set_title(plot_info["title"])
     ax1.set_xlabel(plot_info["xlabel"])
     ax1.set_ylabel(plot_info["ylabel"])
-    plt.xticks(df["model_name"])
+
+    plt.xticks(np.arange(min(df["model_name"]), max(df["model_name"])+1, 5.0))
+
+    # plt.xticks(df["model_name"])
     plt.savefig(saving_path)
     plt.show()
 # path_to_log = "./../trial21_target8.csv"

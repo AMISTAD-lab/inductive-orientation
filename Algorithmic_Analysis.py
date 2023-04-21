@@ -1,5 +1,6 @@
 """
-TODO: file header comment
+Functions performing
+
 """
 
 import itertools
