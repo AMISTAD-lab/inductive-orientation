@@ -60,8 +60,16 @@ def nb_gaussian():
     return GaussianNB()
 
 # linear models
-def logistic_regression_max_iter(max_iter:int):
+def logistic_regression_max_iter(max_iter:int): # default = 100
     return LogisticRegression(max_iter=max_iter, random_state=seed)
 
 def passive_aggressive(max_iter:int):
     PassiveAggressiveClassifier(max_iter=max_iter)
+
+
+# SVC models
+def linear_SVC_max_iter(max_iter:int):
+    return LinearSVC(max_iter=max_iter, random_state=seed)
+
+def c_SVC_max_iter(max_iter:int):
+    return SVC(max_iter=max_iter, random_state=seed)

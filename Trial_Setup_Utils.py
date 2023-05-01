@@ -190,21 +190,31 @@ if __name__ == "__main__":
     elif argv_model.upper() in "ADABOOST":
         model = adaboost_n_estimators
         model_name = "Adaboost"
+        metric_type = "Estimators"
+        is_loop = True
     elif argv_model.upper() in "QDA":
         model = QDA
         model_name = "QDA"
+        #TODO: no metric
     elif argv_model.upper() in "GAUSSIAN":
         model = gaussian_process_max_iter_predict
+        metric_type = "Max iterations"
         model_name = "Gaussian"
     elif argv_model.upper() in "NAIVE_BAYES":
-        model = naiveBayesClassifierSetup
+        model = nb_gaussian # no metric
         model_name = "Naive Bayes"
     elif argv_model.upper() in "LINEAR_SVC":
-        model = linearSVCSetup
+        model = linear_SVC_max_iter
         model_name = "Linear SVC"
+        metric_type = "Max iterations"
+    elif argv_model.upper() in "C_SVC":
+        model = c_SVC_max_iter
+        model_name = "C-support SVC"
+        metric_type = "Max iterations"
     elif argv_model.upper() in "LOGISTIC_REGRESSION":
-        model = logisticRegressionSetup
+        model = logistic_regression_max_iter
         model_name = "Logistic Regression"
+        metric_type = "Max iterations"
     else:
         print("Running all")
         #TODO: implement thing to run all models
