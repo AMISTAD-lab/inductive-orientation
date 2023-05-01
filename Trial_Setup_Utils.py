@@ -6,33 +6,13 @@ import pandas as pd
 import numpy as np
 import pdb
 import re
-
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC, LinearSVC
-from sklearn.gaussian_process import GaussianProcessClassifier
+from models import *
 
 from time import time
 import os
 import sys
 
 
-# model specific generator functions
-def decision_tree_max_depth(max_depth):
-    return DecisionTreeClassifier(max_depth=max_depth) #random_state=42)
-
-def knn_n_neighbors(n_neigbors):
-    return KNeighborsClassifier(n_neighbors =n_neigbors)
-
-def random_forest_n_estimators(n_estimators):
-    return RandomForestClassifier(n_estimators=n_estimators)
-
-#result_number
-#model_number
 
 def model_training_loop(model, model_name, metric_range, metric_type, 
                      num_dataset, num_repeat, model_num, dataset_info, proportion_of_dataset):
@@ -90,7 +70,7 @@ def model_load_loop(model, model_name:str, metric_range:tuple, metric_type:str,
 
 def maybe_mkdir(basepath, folder_name):
     '''
-        creates folder along a path
+        Helper, creates folder along a path
         input:
             basepath - starting directory to add the folders, must exist already
             folder_name - path to the final directory beyond the basepath, folders along the way do not need to exist
@@ -183,8 +163,6 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=test_train_ratio, random_state=42)
     # since X_train is way bigger, now need to implement thing in Inductive_Generator to randomly select and download different holdout sets
 
-    # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = int(sys.argv[2]), random_state=42) # <- old code, whole X_train/X_test is tiny
-                                                                                                                        # holdout set (maybe lead to anomaly cases)
     #NOTE: old code set test_size = 5, but sklearn documentation says that it should be a ratio from 0.0 to 1.0 (?)
 
     # choose which model to test
@@ -200,23 +178,23 @@ if __name__ == "__main__":
         metric_type = "Neighbors"
         is_loop = True
     elif argv_model.upper() in "RANDOM_FOREST_Depth":
-        model = randomForestSetupDepth
+        model = random_forest_depth_setup # default is 100, alter depth
         model_name = "Random Forest"
         metric_type = "Depth"
         is_loop = True
     elif argv_model.upper() in "RANDOM_FOREST_Estimator":
-        model = randomForestSetupEstimator
+        model = random_forest_n_estimators
         model_name = "Random Forest"
         metric_type = "Estimators"
         is_loop = True
     elif argv_model.upper() in "ADABOOST":
-        model = adaboostSetup
+        model = adaboost_n_estimators
         model_name = "Adaboost"
     elif argv_model.upper() in "QDA":
-        model = adaboostSetup
+        model = QDA
         model_name = "QDA"
     elif argv_model.upper() in "GAUSSIAN":
-        model = gaussianProcessSetup
+        model = gaussian_process_max_iter_predict
         model_name = "Gaussian"
     elif argv_model.upper() in "NAIVE_BAYES":
         model = naiveBayesClassifierSetup
