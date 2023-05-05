@@ -7,16 +7,24 @@
 #                                 5. whether to train/inference \n\
 #                                 6. lower range of metrics to test \n\
 #                                 7. upper range of metrics to test \n\
-#                                 8. input model number, \n"
+#                                 8. input model number (only for inference), \n"
+# readonly DATASET=EEG
+# readonly NUMBER_HOLDOUT=10
+# readonly HOLDOUT_SIZE=5
+# readonly MODEL=DECISION_TREE
+# readonly MODE=inference
+# readonly MODEL_NUMBER=1
+# readonly LOWER_RANGE=1
+# readonly UPPER_RANGE=50
+
 readonly DATASET=EEG
 readonly NUMBER_HOLDOUT=10
 readonly HOLDOUT_SIZE=5
-readonly MODEL=DECISION_TREE
+readonly MODEL=ADABOOST
 readonly MODE=inference
-readonly MODEL_NUMBER=1
+readonly MODEL_NUMBER=2
 readonly LOWER_RANGE=1
 readonly UPPER_RANGE=50
-
 
 
 

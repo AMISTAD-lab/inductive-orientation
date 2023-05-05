@@ -17,10 +17,11 @@ readonly MODE=inference
 readonly MODEL_NUMBER=1
 
 # for analysis
-readonly TRIAL_NUM=1
-readonly MODEL_NUM=1
+readonly TRIAL_NUM=4
+readonly MODEL_NUM=2
 readonly SIZE_HOLDOUT=5
 readonly SIZE_TARGET=4
+readonly MODEL_NAME=Adaboost
 
 # for graphing
 # for analysis:
@@ -37,14 +38,15 @@ readonly SIZE_TARGET=4
 # y_label = sys.argv[5]
 readonly DATASET_NAME=EEG_Eye_State
 # readonly TRIAL_NUM=1 already defined in analysis
-readonly PLOT_TITLE=Decision_tree
-readonly X_AXIS=Depth
-readonly Y_AXIS=TBD
+readonly PLOT_TITLE=Adaboost
+readonly X_AXIS=Estimators
+readonly Y_AXIS=Metric
 
 
 #python3 Trial_Setup_Utils.py EEG 10 5 DECISION_TREE inference 1
 #python3 Trial_Setup_Utils.py EEG 5 KNN 
 # python3 Trial_Setup_Utils.py $DATASET $NUMBER_HOLDOUT $HOLDOUT_SIZE $MODEL training
 # python3 Trial_Setup_Utils.py $DATASET $NUMBER_HOLDOUT $HOLDOUT_SIZE $MODEL $MODE $MODEL_NUMBER 
-# python3 run_analysis.py $TRIAL_NUM $MODEL_NUM $SIZE_HOLDOUT $SIZE_TARGET
-python3 run_graphing.py $DATASET_NAME $TRIAL_NUM $PLOT_TITLE $X_AXIS $Y_AXIS 
+
+#python3 run_analysis.py $TRIAL_NUM $MODEL_NUM $SIZE_HOLDOUT $SIZE_TARGET
+python3 run_graphing.py $DATASET_NAME $TRIAL_NUM $MODEL_NAME $PLOT_TITLE $X_AXIS $Y_AXIS 

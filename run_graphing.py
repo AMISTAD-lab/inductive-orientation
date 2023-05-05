@@ -72,7 +72,8 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
     USE THIS ONE
     New plot function
     """
-    # pdb.set_trace()
+
+    
     print("path:", path)
     print("saving_path", saving_path)
     df = pd.read_pickle(path)
@@ -90,18 +91,22 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
     ax1 = fig.add_subplot()
     legend = {}
     for i, metric_type in enumerate(["algorithmic_capacity", "entropic_expressivity", "algorithmic_bias"]):
+        #pdb.set_trace()
         metric_mean = metric_type + "_mean" # column names
         metric_std = metric_type + "_std"
 
 
         df[metric_mean] = df[metric_type].apply(lambda x: np.mean(x))
         df[metric_std] = df[metric_type].apply(lambda x: np.std(x))
-        sns.lineplot(ax=ax1, data=df, x="model_name", y=metric_mean)
+        sns.lineplot(ax=ax1, data=df, x="model_name", y=metric_mean, label=LABELS[metric_type])
         ax1.fill_between(df["model_name"], df[metric_mean] - df[metric_std], df[metric_mean] + df[metric_std], alpha=0.2)
 
-    ax1.legend({"algorithmic_capacity_mean":1, "algorithmic_capacity_std":2,
-                "entropic_expressivity_mean":3,"entropic_expressivity_std":4,
-                "algorithmic_mean":5, "algorithmic_std":6})
+    # ax1.legend({"algorithmic_capacity_mean":1, "algorithmic_capacity_std":2,
+                # "entropic_expressivity_mean":3,"entropic_expressivity_std":4,
+                # "algorithmic_mean":5, "algorithmic_std":6})
+    # pdb.set_trace()
+    ax1.legend(handles=ax1.get_lines()[:])
+
 
     ax1.set_title(plot_info["title"])
     ax1.set_xlabel(plot_info["xlabel"])
@@ -130,20 +135,30 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
 # plt.xticks(df["model_name"])
 
 if __name__ == "__main__":
-
-    if len(sys.argv) !=6:
+    MODEL_NAMES = {
+            "Adaboost": "Adaboost",
+            "Decision_Tree": "Decision Tree"
+    }
+    LABELS = {
+            "algorithmic_capacity":"Algorithmic Capacity (bits)",
+            "entropic_expressivity":"Entropic Expressivity (bits)",
+            "algorithmic_bias":"Algorithmic Bias (%)"
+            }
+    
+    if len(sys.argv) !=7:
+        print(sys.argv)
         sys.exit("Usage error: 1. require dataset name, \n\
                                2. trial number, \n\
-                               3. plot title, \n\
-                               4. x-axis label \n\
-                               5. input model number, \n")
+                               3. model name \n\
+                               4. plot title, \n\
+                               5. x-axis label \n\
+                               6. input model number, \n")
     argv_dataset = sys.argv[1]
     trial_num = int(sys.argv[2])
-    argv_model = sys.argv[3] # string model to test
-    x_label = sys.argv[4]
-    y_label = sys.argv[5]
-
-
+    argv_model = MODEL_NAMES[sys.argv[3]] # string model to test
+    plot_title = sys.argv[4]
+    x_label = sys.argv[5]
+    y_label = sys.argv[6]
     
     # FILE_NAME = "./../trial21_target8.csv"
     # BASE_SAVING_PATH = "./../plots/trial21_target8_"
@@ -159,7 +174,7 @@ if __name__ == "__main__":
     # Random Forest
     plot_info = {"title": argv_model, "xlabel": x_label, "ylabel": y_label}
     # individual_plot_mult("./../analysis/trial1/EEG.pkl", "./../analysis/trial1/EEG.pdf", "Decision Tree", plot_info)
-    individual_plot_mult(f"./analysis/trial{trial_num}/{argv_dataset}.pkl", f"./analysis/trial{trial_num}/{argv_dataset}.pdf", "Decision Tree", plot_info)
+    individual_plot_mult(f"./analysis/trial{trial_num}/{argv_dataset}.pkl", f"./analysis/trial{trial_num}/{argv_dataset}.pdf", argv_model, plot_info)
 
     # plot_info = {"title": "All Models on Shoppers Intention Dataset", "xlabel": "", "ylabel":""}
     # all_plots("./../trial19_target8.csv", "algorithmic_capacity", "./../plots/trial19_target8_capacity.pdf", plot_info)

@@ -26,7 +26,7 @@ seed = 42 # set seed
 # ensemble
 def adaboost_n_estimators(n_estimators:int):
     "default n_estimators = 50"
-    return AdaBoostClassifier(n_estimators=n_estimators, random_state=seed)
+    return AdaBoostClassifier(n_estimators=n_estimators, random_state=seed) 
 
 def random_forest_n_estimators(n_estimators:int):
     return RandomForestClassifier(n_estimators=n_estimators, random_state=seed)
