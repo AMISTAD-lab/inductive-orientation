@@ -11,6 +11,8 @@ from models import *
 from time import time
 import os
 import sys
+from models import *
+from constants import ModelNamesMetrics
 
 
 
@@ -94,6 +96,7 @@ def next_trial_num(dir, default):
     else:
         return max(log_nums) + 1
     
+
 if __name__ == "__main__":
     if len(sys.argv) != 9 and len(sys.argv) != 8:
         sys.exit("Usage error: 1. require dataset name, \n\
@@ -118,7 +121,7 @@ if __name__ == "__main__":
     # update trial number
     if os.path.exists("models") == False:
         maybe_mkdir(".", "models")
-    current_model_num = next_trial_num("models", default=1)
+    current_model_num = next_trial_num("models", default=1) # current_model_num is the trial number
 
     if os.path.exists("results") == False:
         maybe_mkdir(".", "results")
@@ -165,11 +168,12 @@ if __name__ == "__main__":
 
     #NOTE: old code set test_size = 5, but sklearn documentation says that it should be a ratio from 0.0 to 1.0 (?)
 
+    
     # choose which model to test
     is_loop= False
-    if argv_model.upper() in "DECISION_TREE":
+    if argv_model.upper() in ModelNamesMetrics.DECISION_TREE_MAX_DEPTH.value.upper():
         model = decision_tree_max_depth
-        model_name = "Decision Tree" # TODO: implement enum system for model names so we don't get into annoying errors
+        model_name = ModelNamesMetrics.DECISION_TREE_MAX_DEPTH.value # TODO: implement enum system for model names so we don't get into annoying errors
         metric_type = "Depth"
         is_loop = True # whether model must loop over metric
     elif argv_model.upper() in "KNN":
@@ -177,19 +181,19 @@ if __name__ == "__main__":
         model_name = "KNN"
         metric_type = "Neighbors"
         is_loop = True
-    elif argv_model.upper() in "RANDOM_FOREST_Depth":
+    elif argv_model.upper() in ModelNamesMetrics.RANDOM_FOREST_DEPTH.value.upper():
         model = random_forest_depth_setup # default is 100, alter depth
-        model_name = "Random Forest"
+        model_name = ModelNamesMetrics.RANDOM_FOREST_DEPTH.value
         metric_type = "Depth"
         is_loop = True
-    elif argv_model.upper() in "RANDOM_FOREST_Estimator":
+    elif argv_model.upper() in ModelNamesMetrics.RANDOM_FOREST_ESTIMATORS.value.upper():
         model = random_forest_n_estimators
-        model_name = "Random Forest"
+        model_name = ModelNamesMetrics.RANDOM_FOREST_ESTIMATORS.value
         metric_type = "Estimators"
         is_loop = True
-    elif argv_model.upper() in "ADABOOST":
+    elif argv_model.upper() in ModelNamesMetrics.ADABOOST_ESTIMATORS.value.upper():
         model = adaboost_n_estimators
-        model_name = "Adaboost"
+        model_name = ModelNamesMetrics.ADABOOST_ESTIMATORS.value
         metric_type = "Estimators"
         is_loop = True
     elif argv_model.upper() in "QDA":
@@ -234,6 +238,18 @@ if __name__ == "__main__":
         print("Must enter 'training' or 'inference'")
         #TODO: implement non-looping generic setup
 
+
+    # notify trial number
+    print(f"{trial_mode} complete!\n\
+          Trial mode: {trial_mode}\n\
+          Trial number: {current_model_num}\n\
+          Model type: {argv_model.upper()}\n\
+          Measure range: ({lower_range}, {upper_range})\n\
+          Dataset name: {dataset_name}\n")
+    
+    if trial_mode != "training":
+        print(f"inference of model {model_num}\n")
+    
 
 
     # randomForestSetup(50)

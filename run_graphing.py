@@ -135,10 +135,10 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
 # plt.xticks(df["model_name"])
 
 if __name__ == "__main__":
-    MODEL_NAMES = {
-            "Adaboost": "Adaboost",
-            "Decision_Tree": "Decision Tree"
-    }
+    # MODEL_NAMES = {
+    #         "Adaboost": "Adaboost",
+    #         "Decision_Tree": "Decision Tree"
+    # }
     LABELS = {
             "algorithmic_capacity":"Algorithmic Capacity (bits)",
             "entropic_expressivity":"Entropic Expressivity (bits)",
@@ -155,7 +155,8 @@ if __name__ == "__main__":
                                6. input model number, \n")
     argv_dataset = sys.argv[1]
     trial_num = int(sys.argv[2])
-    argv_model = MODEL_NAMES[sys.argv[3]] # string model to test
+    # argv_model = MODEL_NAMES[sys.argv[3]] # string model to test
+    argv_model = sys.argv[3] # string model to test
     plot_title = sys.argv[4]
     x_label = sys.argv[5]
     y_label = sys.argv[6]

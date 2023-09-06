@@ -20,16 +20,15 @@
 readonly DATASET=EEG
 readonly NUMBER_HOLDOUT=10
 readonly HOLDOUT_SIZE=5
-readonly MODEL=ADABOOST
-readonly MODE=inference
-readonly MODEL_NUMBER=2
+readonly MODEL=Decision_Tree
+readonly MODEL_NUMBER=3
 readonly LOWER_RANGE=1
-readonly UPPER_RANGE=50
+readonly UPPER_RANGE=3
 
 
-
+# RUNS BOTH TRAINING AND INFERENCE
 #python3 Trial_Setup_Utils.py EEG 10 5 DECISION_TREE inference 1
 #python3 Trial_Setup_Utils.py EEG 5 KNN 
-#python3 Trial_Setup_Utils.py $DATASET $NUMBER_HOLDOUT $HOLDOUT_SIZE $MODEL training $LOWER_RANGE $UPPER_RANGE
-python3 Trial_Setup_Utils.py $DATASET $NUMBER_HOLDOUT $HOLDOUT_SIZE $MODEL $MODE $LOWER_RANGE $UPPER_RANGE $MODEL_NUMBER
+python3 Trial_Setup_Utils.py $DATASET $NUMBER_HOLDOUT $HOLDOUT_SIZE $MODEL training $LOWER_RANGE $UPPER_RANGE
+python3 Trial_Setup_Utils.py $DATASET $NUMBER_HOLDOUT $HOLDOUT_SIZE $MODEL inference $LOWER_RANGE $UPPER_RANGE $MODEL_NUMBER
 
