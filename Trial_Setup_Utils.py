@@ -12,7 +12,8 @@ from time import time
 import os
 import sys
 from models import *
-from constants import ModelNamesMetrics
+from constants import ModelNamesMetrics, RESULTS_FOLDER
+import argparse
 
 
 
@@ -23,7 +24,7 @@ def model_training_loop(model, model_name, metric_range, metric_type,
     for i in metric_range:
         print(f"Training {model_name} with {i} {metric_type}")
         trial_start = time()
-        saving_dir = f"models/model{model_num}/{model_name}{i}"
+        saving_dir = f"{RESULTS_FOLDER}/model{model_num}/{model_name}{i}"
         maybe_mkdir(".", saving_dir) # make folder to store the models
         model_iter = model(i) # classifier
         model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], saving_dir, dataset_info, holdout_size=None, num_holdouts=0)
@@ -56,13 +57,13 @@ def model_load_loop(model, model_name:str, metric_range:tuple, metric_type:str,
     """
     start = time()
     for i in metric_range:
-        print(f"Starting result {result_num} using models from model {model_name} with {i} {metric_type}")
+        print(f"Starting result {model_num} using models from model {model_name} with {i} {metric_type}")
         trial_start = time()
-        maybe_mkdir(".", f"results/trial{result_num}") # make folder to store the LDMs
+        maybe_mkdir(".", f"{RESULTS_FOLDER}/results/trial{model_num}") # make folder to store the LDMs
         model_iter = model(i) # classifier
-        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], f"models/model{model_num}/{model_name}{i}", dataset_info, holdout_size, num_holdouts)
+        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], f"{RESULTS_FOLDER}/model{model_num}/{model_name}{i}", dataset_info, holdout_size, num_holdouts)
         model_generator.getN_LDM_Pf(dataset_info["X_test"], dataset_info["y_test"], num_dataset, num_repeat, 0.15, from_download= True)
-        model_generator.save_state(f"results/trial{result_num}/model_{model_num}_{model_name}_{i}.json", f"{model_name}{i}", dataset_info["dataset_name"])
+        model_generator.save_state(f"{RESULTS_FOLDER}/results/trial{model_num}/model_{model_num}_{model_name}_{i}.json", f"{model_name}{i}", dataset_info["dataset_name"])
         trial_end = time()
         print(f"{model_name} with {i} {metric_type} finished. Time elapsed: {(trial_end - trial_start)/60}.")
 
@@ -84,7 +85,10 @@ def maybe_mkdir(basepath, folder_name):
     for path in path_to_add:
         current_path = os.path.join(exist_path, path)
         if path not in os.listdir(exist_path):
-            os.mkdir(current_path)
+            try:
+                os.mkdir(current_path)
+            except:
+                pass
         exist_path = current_path
     return exist_path
 
@@ -98,35 +102,65 @@ def next_trial_num(dir, default):
     
 
 if __name__ == "__main__":
-    if len(sys.argv) != 9 and len(sys.argv) != 8:
-        sys.exit("Usage error: 1. require dataset name, \n\
-                                2. number of holdout sets, \n\
-                                3. size of holdout set, \n\
-                                4. model to test, \n\
-                                5. whether to train/inference \n\
-                                6. lower range of metrics to test \n\
-                                7. upper range of metrics to test \n\
-                                8. input model number, \n")
-    argv_dataset = sys.argv[1]
-    num_holdout_sets = int(sys.argv[2])
-    holdout_set_size = int(sys.argv[3])
-    argv_model = sys.argv[4]
-    trial_mode = sys.argv[5]
-    if trial_mode == "inference":
-        model_num = sys.argv[8] # which model to load
-    lower_range = int(sys.argv[6])
-    upper_range = int(sys.argv[7])    
+    parser = argparse.ArgumentParser(description='Trains models and Creates LDM')
+    parser.add_argument('--dataset', type=str, help='provide the name of the dataset', required=True)
+    parser.add_argument('--num_holdout', type=int, help='provide the number of holdout sets', required=True)
+    parser.add_argument('--size_holdout', type=int, help='provide the size of each holdout set', required=True)
+    parser.add_argument('--model_name', type=str, help='provide both the name of model and parameter to vary, check constants.py', required=True)
+    parser.add_argument('--mode', type=str, help='\"train\" or \"inference\"', required=True)
+    parser.add_argument('--lower', type=float, help='the lower bound of the parameter', required=True)
+    parser.add_argument('--upper', type=float, help='the upper bound of the parameter', required=True)
+    parser.add_argument('--step', type=float, help='step size for incrementing metric')
+    parser.add_argument('--model_num', type=int, help='the past experiment that generated models (only used during inference)', required=True)
 
-    
+    args = parser.parse_args()
+    argv_dataset = args.dataset
+    num_holdout_sets = args.num_holdout
+    holdout_set_size = args.size_holdout
+    argv_model = args.model_name
+    trial_mode = args.mode
+    model_num = args.model_num
+
+    # if trial_mode == "inference":
+    #     model_num = args.model_num
+    #     if not model_num:
+    #         print("In inference mode, but cannot find model_num, please provide --model_num")
+    lower_range = args.lower
+    upper_range = args.upper
+    if args.step:
+        step = args.step
+    else:
+        step = 1.
+
+
+    # if len(sys.argv) != 9 and len(sys.argv) != 8:
+    #     sys.exit("Usage error: 1. require dataset name, \n\
+    #                             2. number of holdout sets, \n\
+    #                             3. size of holdout set, \n\
+    #                             4. model to test, \n\
+    #                             5. whether to train/inference \n\
+    #                             6. lower range of metrics to test \n\
+    #                             7. upper range of metrics to test \n\
+    #                             8. input model number, \n")
+    # argv_dataset = sys.argv[1]
+    # num_holdout_sets = int(sys.argv[2])
+    # holdout_set_size = int(sys.argv[3])
+    # argv_model = sys.argv[4]
+    # trial_mode = sys.argv[5]
+    # if trial_mode == "inference":
+    #     model_num = sys.argv[8] # which model to load
+    # lower_range = int(sys.argv[6])
+    # upper_range = int(sys.argv[7])   
+
+
     # update trial number
-    if os.path.exists("models") == False:
+    if os.path.exists(f"{RESULTS_FOLDER}/models") == False:
         maybe_mkdir(".", "models")
-    current_model_num = next_trial_num("models", default=1) # current_model_num is the trial number
-
-    if os.path.exists("results") == False:
+    # model_numl_num = next_trial_num("models", default=1) # model_numl_num is the trial number
+    if os.path.exists(f"{RESULTS_FOLDER}/results") == False:
         maybe_mkdir(".", "results")
-    current_result_num = next_trial_num("results", default=1)
-    print(sys.argv)
+    # current_result_num ={RESULTS_FOLDER} next_trial_num("results", default=1)
+    # print(sys.argv)
 
     # load and configure dataset
     if argv_dataset in "Abalone":
@@ -176,9 +210,9 @@ if __name__ == "__main__":
         model_name = ModelNamesMetrics.DECISION_TREE_MAX_DEPTH.value # TODO: implement enum system for model names so we don't get into annoying errors
         metric_type = "Depth"
         is_loop = True # whether model must loop over metric
-    elif argv_model.upper() in "KNN":
+    elif argv_model.upper() in ModelNamesMetrics.KNN_NEIGHBORS.value.upper():
         model = knn_n_neighbors
-        model_name = "KNN"
+        model_name =  ModelNamesMetrics.KNN_NEIGHBORS.value
         metric_type = "Neighbors"
         is_loop = True
     elif argv_model.upper() in ModelNamesMetrics.RANDOM_FOREST_DEPTH.value.upper():
@@ -200,24 +234,24 @@ if __name__ == "__main__":
         model = QDA
         model_name = "QDA"
         #TODO: no metric
-    elif argv_model.upper() in "GAUSSIAN":
+    elif argv_model.upper() in ModelNamesMetrics.GAUSSIAN_PROCESS_MAX_ITER.value.upper():
         model = gaussian_process_max_iter_predict
         metric_type = "Max iterations"
-        model_name = "Gaussian"
+        model_name = ModelNamesMetrics.GAUSSIAN_PROCESS_MAX_ITER.value
     elif argv_model.upper() in "NAIVE_BAYES":
         model = nb_gaussian # no metric
         model_name = "Naive Bayes"
-    elif argv_model.upper() in "LINEAR_SVC":
+    elif argv_model.upper() in ModelNamesMetrics.LINEAR_SVC_MAX_ITER.value.upper():
         model = linear_SVC_max_iter
-        model_name = "Linear SVC"
+        model_name = ModelNamesMetrics.LINEAR_SVC_MAX_ITER.value
         metric_type = "Max iterations"
-    elif argv_model.upper() in "C_SVC":
+    elif argv_model.upper() in ModelNamesMetrics.C_SUPPORT_SVC_MAX_ITER.value.upper():
         model = c_SVC_max_iter
-        model_name = "C-support SVC"
+        model_name = ModelNamesMetrics.C_SUPPORT_SVC_MAX_ITER.value
         metric_type = "Max iterations"
-    elif argv_model.upper() in "LOGISTIC_REGRESSION":
+    elif argv_model.upper() in ModelNamesMetrics.LOGISTIC_REGRESSION_MAX_ITER.value.upper():
         model = logistic_regression_max_iter
-        model_name = "Logistic Regression"
+        model_name = ModelNamesMetrics.LOGISTIC_REGRESSION_MAX_ITER.value
         metric_type = "Max iterations"
     else:
         print("Running all")
@@ -226,14 +260,14 @@ if __name__ == "__main__":
     
     if trial_mode == "training":
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
-        model_training_loop(model=model, model_name=model_name, metric_range=range(lower_range, upper_range), 
-                        metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=current_model_num, 
+        model_training_loop(model=model, model_name=model_name, metric_range=np.arange(lower_range, upper_range, step), 
+                        metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=model_num, 
                         dataset_info=dataset_info, proportion_of_dataset=0.15)
     elif trial_mode == "inference":
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
-        model_load_loop(model=model, model_name=model_name, metric_range=range(lower_range,upper_range), 
+        model_load_loop(model=model, model_name=model_name, metric_range=np.arange(lower_range, upper_range, step), 
                         metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=model_num,
-                        dataset_info=dataset_info, result_num=current_result_num, num_holdouts=num_holdout_sets, holdout_size=holdout_set_size)
+                        dataset_info=dataset_info, result_num=model_num, num_holdouts=num_holdout_sets, holdout_size=holdout_set_size)
     else:
         print("Must enter 'training' or 'inference'")
         #TODO: implement non-looping generic setup
@@ -242,28 +276,13 @@ if __name__ == "__main__":
     # notify trial number
     print(f"{trial_mode} complete!\n\
           Trial mode: {trial_mode}\n\
-          Trial number: {current_model_num}\n\
+          Trial number: {model_num}\n\
           Model type: {argv_model.upper()}\n\
           Measure range: ({lower_range}, {upper_range})\n\
           Dataset name: {dataset_name}\n")
     
     if trial_mode != "training":
         print(f"inference of model {model_num}\n")
-    
-
-
-    # randomForestSetup(50)
-    # adaboostSetup()
-    # QDASetup()
-    # naiveBayesClassifierSetup()
-    # linearSVCSetup()
-    # logisticRegressionSetup()
-    # gaussianProcessSetup()
-    # randomForestSetupDepth(1, 50)
-    # randomForestSetupDepth(11, 50)
-
-        # decisionTreeSetup(50)
-    #kNNSetup(2, num_dataset=10)
     
 
 

@@ -9,6 +9,7 @@ import numpy as np
 import pickle
 import sys
 import pdb
+from constants import RESULTS_FOLDER
 
 def all_plots(path, analysis_type, saving_path, plot_info):
     df = pd.read_csv(path)
@@ -87,52 +88,48 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
     df["model_name"] = df["model_name"].apply(lambda x: re.split('(\d+)',x)[-2])
     df["model_name"]=df["model_name"].astype("int8")
     df = df.sort_values("model_name")
-    fig = plt.figure()
-    ax1 = fig.add_subplot()
+    exp_cap_fig = plt.figure()
+    exp_cap_fig_ax = exp_cap_fig.add_subplot()
     legend = {}
-    for i, metric_type in enumerate(["algorithmic_capacity", "entropic_expressivity", "algorithmic_bias"]):
-        #pdb.set_trace()
+    for i, metric_type in enumerate(["algorithmic_capacity", "entropic_expressivity"]):
         metric_mean = metric_type + "_mean" # column names
         metric_std = metric_type + "_std"
 
 
         df[metric_mean] = df[metric_type].apply(lambda x: np.mean(x))
         df[metric_std] = df[metric_type].apply(lambda x: np.std(x))
-        sns.lineplot(ax=ax1, data=df, x="model_name", y=metric_mean, label=LABELS[metric_type])
-        ax1.fill_between(df["model_name"], df[metric_mean] - df[metric_std], df[metric_mean] + df[metric_std], alpha=0.2)
-
-    # ax1.legend({"algorithmic_capacity_mean":1, "algorithmic_capacity_std":2,
-                # "entropic_expressivity_mean":3,"entropic_expressivity_std":4,
-                # "algorithmic_mean":5, "algorithmic_std":6})
-    # pdb.set_trace()
-    ax1.legend(handles=ax1.get_lines()[:])
-
-
-    ax1.set_title(plot_info["title"])
-    ax1.set_xlabel(plot_info["xlabel"])
-    ax1.set_ylabel(plot_info["ylabel"])
-
+        sns.lineplot(ax=exp_cap_fig_ax, data=df, x="model_name", y=metric_mean, label=LABELS[metric_type])
+        exp_cap_fig_ax.fill_between(df["model_name"], df[metric_mean] - df[metric_std], df[metric_mean] + df[metric_std], alpha=0.2)
+    exp_cap_fig_ax.legend(handles=exp_cap_fig_ax.get_lines()[:])
+    exp_cap_fig_ax.set_title(f"{plot_info['title']}\nAlgorithmic Capacity & Entropic Expressivity")
+    exp_cap_fig_ax.set_xlabel(plot_info["xlabel"])
+    exp_cap_fig_ax.set_ylabel("Bits")
     plt.xticks(np.arange(min(df["model_name"]), max(df["model_name"])+1, 5.0))
-
     # plt.xticks(df["model_name"])
-    plt.savefig(saving_path)
-    plt.show()
-# path_to_log = "./../trial21_target8.csv"
-# df = pandas.read_csv(path_to_log)
-# df = df[df["model_name"].apply(lambda x: "RandomForest" in x)]
-# df["model_name"] = df["model_name"].apply(lambda x: x.split("_")[1])
-# df["model_name"] = df["model_name"].apply(lambda x: re.split('(\d+)',x)[-2])
-# df["model_name"]=df["model_name"].astype("int8")
-# fig = plt.figure()
-# ax1 = fig.add_subplot()
-# sns.lineplot(ax=ax1, data=df, x="model_name", y="algorithmic_capacity")
-# sns.lineplot(ax=ax1, data=df, x="model_name", y="entropic_expressivity")
-# sns.lineplot(ax=ax1, data=df, x="model_name", y="algorithmic_bias")
-# ax1.legend({"algorithmic_capacity":1, "entropic_expressivity":2,"algorithmic_bias":3})
-# ax1.set_title("Random Forest")
-# ax1.set_xlabel("number of estimators")
-# ax1.set_ylabel("")
-# plt.xticks(df["model_name"])
+    plt.savefig(saving_path + "_exp_cap.pdf")
+    plt.close()
+
+#   Plot algorithmic bias
+    alg_fig = plt.figure()
+    alg_fig_ax = alg_fig.add_subplot()
+    legend = {}
+    algorithmic_bias_types = [title for title in df.columns if "algorithmic_bias" in title]
+    for i, metric_type in enumerate(algorithmic_bias_types):
+        metric_mean = metric_type + "_mean" # column names
+        metric_std = metric_type + "_std"
+
+        df[metric_mean] = df[metric_type].apply(lambda x: np.mean(x))
+        df[metric_std] = df[metric_type].apply(lambda x: np.std(x))
+        sns.lineplot(ax=alg_fig_ax, data=df, x="model_name", y=metric_mean, label=LABELS[metric_type])
+        alg_fig_ax.fill_between(df["model_name"], df[metric_mean] - df[metric_std], df[metric_mean] + df[metric_std], alpha=0.2)
+    alg_fig_ax.legend(handles=alg_fig_ax.get_lines()[:])
+    alg_fig_ax.set_title(f"{plot_info['title']}\nAlgorithmic Bias")
+    alg_fig_ax.set_xlabel(plot_info["xlabel"])
+    alg_fig_ax.set_ylabel("Bias")
+    plt.xticks(np.arange(min(df["model_name"]), max(df["model_name"])+1, 5.0))
+    # plt.xticks(df["model_name"])
+    plt.savefig(saving_path+f"_alg.pdf")
+    plt.close()
 
 if __name__ == "__main__":
     # MODEL_NAMES = {
@@ -142,7 +139,13 @@ if __name__ == "__main__":
     LABELS = {
             "algorithmic_capacity":"Algorithmic Capacity (bits)",
             "entropic_expressivity":"Entropic Expressivity (bits)",
-            "algorithmic_bias":"Algorithmic Bias (%)"
+            # "algorithmic_bias":"Algorithmic Bias (%)"
+            "algorithmic_bias_size_1":"Target Size 1 (%)",
+            "algorithmic_bias_size_2":"Target Size 2 (%)",
+            "algorithmic_bias_size_3":"Target Size 3 (%)",
+            "algorithmic_bias_size_4":"Target Size 4 (%)",
+            "algorithmic_bias_size_5":"Target Size 5 (%)",
+
             }
     
     if len(sys.argv) !=7:
@@ -175,7 +178,7 @@ if __name__ == "__main__":
     # Random Forest
     plot_info = {"title": argv_model, "xlabel": x_label, "ylabel": y_label}
     # individual_plot_mult("./../analysis/trial1/EEG.pkl", "./../analysis/trial1/EEG.pdf", "Decision Tree", plot_info)
-    individual_plot_mult(f"./analysis/trial{trial_num}/{argv_dataset}.pkl", f"./analysis/trial{trial_num}/{argv_dataset}.pdf", argv_model, plot_info)
+    individual_plot_mult(f"{RESULTS_FOLDER}/analysis/trial{trial_num}/{argv_dataset}.pkl", f"{RESULTS_FOLDER}/analysis/trial{trial_num}/{argv_dataset}", argv_model, plot_info)
 
     # plot_info = {"title": "All Models on Shoppers Intention Dataset", "xlabel": "", "ylabel":""}
     # all_plots("./../trial19_target8.csv", "algorithmic_capacity", "./../plots/trial19_target8_capacity.pdf", plot_info)

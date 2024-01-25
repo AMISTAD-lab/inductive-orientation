@@ -148,7 +148,6 @@ class Inductive_Generator:
       print("generating LDM")
       LDM = (list(map(lambda x: generateLDMHelper(x), tqdm(range(num_datasets)))))
 
-      #self.LDM = LDM # no longer use self.LDM (use self.LDMs instead)
       return LDM
 
     elif self.mode == "predict proba":

@@ -2,7 +2,7 @@
 Functions performing
 
 """
-
+from constants import ALGORITHM_BIAS
 import itertools
 import numpy as np
 from scipy.stats import entropy
@@ -11,6 +11,7 @@ import Inductive_Generator
 import os
 import pandas as pd
 import pdb
+from collections import defaultdict
 def getNTargets(y_tests, min_num_accurate, classes=[0,1]):
     targets = []
     for y_test in y_tests:
@@ -144,13 +145,16 @@ def varianceUpToN(list_of_PD):
 
 def singleAnalysis(saved_state, targets):
     '''
+    NOTE: Discontinued, switched to function that returns expressivity and capacity, and a separate 
+            function that returns just bias
+
+
     singleAnalysis calculates Bias, Entropic Expressivity, and Algorithmic Capacity for a model
     inputs:
         file: the path to the json file storing the model's LDMs and PDs
         target: a list of target vectors to evaluate the model, each has corresponding PD and LDM. 
         If not given, then the function will not calculate Bias
     '''
-    #print("Current file: ", file)
     bias = np.array([])
     expressivity = np.array([])
     capacity = np.array([])
@@ -172,8 +176,51 @@ def singleAnalysis(saved_state, targets):
         capacity_ = computeAlgorithmicCapacity(saved_state["LDMs"][i], PD)
         capacity = np.append(capacity, capacity_)
     #pdb.set_trace()
-
     return tuple([bias, expressivity, capacity])
+
+
+def run_bias(saved_state, targets_sets:list[list]):
+    """NEW FUNCTION (9/12/2023), runAnalysis helper. Computes bias for dataframe separately given 
+    list of target set."""
+    #bias_sets = np.array([])
+    #bias_dict = {f"{ALGORITHM_BIAS}_size_{target_size}" : [] for target_size in range(1,5)} # 
+    bias_dict = defaultdict(list)
+    # pdb.set_trace()
+    # for target_set in targets_sets:
+    for i, PD in enumerate(saved_state["PDs"]):
+        target_set = targets_sets[i]
+        # append bias for each target set size for this specific holdout set
+
+        for target_size in target_set: # target set is dict size -> target
+            target = target_set[target_size]
+            if target is not None:
+                bias = computeAlgorithmicBias(target, PD)
+            else: 
+                bias = np.nan
+            bias_dict[f"{ALGORITHM_BIAS}_size_{target_size}"].append(bias)
+
+        # bias_sets = np.append(bias_sets, biases_local)
+
+    return bias_dict
+
+def run_expressivity_capacity(saved_state):
+    """NEW FUNCTION (9/12/2023), runAnalysis helper. Computes expressivity and capacity for dataframe 
+    separately."""
+    expressivity = np.array([])
+    capacity = np.array([])
+    
+    for i, PD in enumerate(saved_state["PDs"]):
+       
+        # append expressivity
+        expressivity_ = computeEntropy(PD)
+        expressivity = np.append(expressivity, expressivity_)
+
+        # append capacity
+        capacity_ = computeAlgorithmicCapacity(saved_state["LDMs"][i], PD)
+        capacity = np.append(capacity, capacity_)
+    #pdb.set_trace()
+    return tuple([expressivity, capacity])
+
     # with open(file) as logs:
     #     saved_state = json.loads(logs.read(), cls = Inductive_Generator.Inductive_Generator_Decoder)
     #     if type(target) != type(None):
@@ -192,7 +239,7 @@ def singleAnalysis(saved_state, targets):
     #return tuple(analytics)
         
 
-def runAnalysis(file:str, targets:list=None, name_column=[], bias_column=[], entropic_expressivity_column = [], algorithmic_capacity_column = []):
+def runAnalysis(file:str, target_sets:list[list]=None, name_column=[], bias_columns=defaultdict(list), entropic_expressivity_column = [], algorithmic_capacity_column = []):
     '''
     runAnalysis allows multiple calls to singleAnalysis
     inputs:
@@ -207,16 +254,40 @@ def runAnalysis(file:str, targets:list=None, name_column=[], bias_column=[], ent
         logs = os.listdir(file)
         logs = [os.path.join(file, log) for log in logs]
         # pdb.set_trace()
-        for log_file in logs:
+        for log_file in logs: 
             with open(log_file) as log:
                 saved_state = json.loads(log.read(), cls = Inductive_Generator.Inductive_Generator_Decoder)
-            bias, entropic_expressivity, algorithmic_capacity = singleAnalysis(saved_state, targets)
+            
+            # NOTE:
+            # size 10, 10
+            entropic_expressivity, algorithmic_capacity = run_expressivity_capacity(saved_state)
+            
+            # size 50 (should be 10)
+            # bias_sets = run_bias(saved_state, target_sets) # 
+            bias_dict = run_bias(saved_state, target_sets) # 
+
+            # bias, entropic_expressivity, algorithmic_capacity = singleAnalysis(saved_state, targets)
+
+            # pdb.set_trace()
             name_column.append(log_file.split("/")[-1].split(".")[0])
-            bias_column.append(bias)
+            # bias_column.append(bias)
+            for target_set_size in bias_dict:
+                bias_columns[target_set_size].append(bias_dict[target_set_size])
+            
+            # for bias_set in bias_sets: 
+            #     # a bias set corresponds to the algorithmic biases of a single holdout set (varying target set)
+            #     for target_set_size in bias_set:
+            #         bias_columns[target_set_size].append(bias_set[target_set_size]) # fix key name
+            # pdb.set_trace()
             entropic_expressivity_column.append(entropic_expressivity)
             algorithmic_capacity_column.append(algorithmic_capacity)
-        summary = pd.DataFrame({"model_name":name_column, "algorithmic_bias" : bias_column, \
-            "entropic_expressivity" :entropic_expressivity_column, "algorithmic_capacity" : algorithmic_capacity_column})
+
+        data_dict = {"model_name":name_column, \
+            "entropic_expressivity" :entropic_expressivity_column, "algorithmic_capacity" : algorithmic_capacity_column}
+        data_dict.update(bias_columns)
+        summary = pd.DataFrame(data_dict)
+        #summary = pd.DataFrame({"model_name":name_column, "algorithmic_bias" : bias_column, \
+            # "entropic_expressivity" :entropic_expressivity_column, algorithmic_capacity" : algorithmic_capacity_column})
         summary = summary.sort_values(by= "model_name")
         return summary
 

@@ -32,16 +32,16 @@ given learning algorithm in order to improve generalizability / robustness over 
 """
 def adaboost_n_estimators(n_estimators:int):
     "default n_estimators = 50"
-    return AdaBoostClassifier(n_estimators=n_estimators, random_state=seed) 
+    return AdaBoostClassifier(n_estimators=int(n_estimators)) 
 
 def random_forest_n_estimators(n_estimators:int):
-    return RandomForestClassifier(n_estimators=n_estimators, random_state=seed)
+    return RandomForestClassifier(n_estimators=int(n_estimators))
 
 def random_forest_depth_setup(max_depth:int):
-    return RandomForestClassifier(max_depth=max_depth, random_state=seed) #TODO: could also try max_features
+    return RandomForestClassifier(max_depth=int(max_depth), n_estimators=10) #TODO: could also try max_features
 
 def extra_trees_setup_n(n_estimators:int):
-    return ExtraTreesClassifier(n_estimators=n_estimators, random_state=seed)
+    return ExtraTreesClassifier(n_estimators=int(n_estimators))
 
 
 # discriminant analysis (QDA has no metric)
@@ -50,14 +50,14 @@ def QDA():
 
 # gaussian process
 def gaussian_process_max_iter_predict(max_iter_predict:int):
-    return GaussianProcessClassifier(max_iter_predict=max_iter_predict,random_state=seed)
+    return GaussianProcessClassifier(max_iter_predict=int(max_iter_predict),random_state=seed)
 
 # trees
 def decision_tree_max_depth(max_depth:int):
-    return DecisionTreeClassifier(max_depth=max_depth) #random_state=42)
+    return DecisionTreeClassifier(max_depth=int(max_depth)) #random_state=42)
 
 def knn_n_neighbors(n_neigbors:int):
-    return KNeighborsClassifier(n_neighbors =n_neigbors)
+    return KNeighborsClassifier(n_neighbors =int(n_neigbors))
 
 def radiusnn_radius(radius:float):
     return RadiusNeighborsClassifier(radius=radius)
@@ -68,19 +68,19 @@ def nb_gaussian():
 
 # linear models
 def logistic_regression_max_iter(max_iter:int): # default = 100
-    return LogisticRegression(max_iter=max_iter, random_state=seed)
+    return LogisticRegression(max_iter=int(max_iter), random_state=seed)
 
 def passive_aggressive(max_iter:int):
-    PassiveAggressiveClassifier(max_iter=max_iter)
+    PassiveAggressiveClassifier(max_iter=int(max_iter))
 
 
 # SVC models
 def linear_SVC_max_iter(max_iter:int):
-    return LinearSVC(max_iter=max_iter, random_state=seed)
+    return LinearSVC(max_iter=int(max_iter), random_state=seed)
 
 def c_SVC_max_iter(max_iter:int):
-    return SVC(max_iter=max_iter, random_state=seed)
+    return SVC(max_iter=int(max_iter), random_state=seed)
 
 # MLP models
 def MLP_hidden_layer(n_hidden_layers:int):
-    return MLPClassifier(hidden_layer_sizes=n_hidden_layers, random_state=seed)
+    return MLPClassifier(hidden_layer_sizes=int(n_hidden_layers), random_state=seed)
