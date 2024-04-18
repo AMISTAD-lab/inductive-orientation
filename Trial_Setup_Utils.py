@@ -17,6 +17,7 @@ import argparse
 
 
 
+
 def model_training_loop(model, model_name, metric_range, metric_type, 
                      num_dataset, num_repeat, model_num, dataset_info, proportion_of_dataset):
     """"Trains and downloads LDMs"""
@@ -24,7 +25,7 @@ def model_training_loop(model, model_name, metric_range, metric_type,
     for i in metric_range:
         print(f"Training {model_name} with {i} {metric_type}")
         trial_start = time()
-        saving_dir = f"{RESULTS_FOLDER}/model{model_num}/{model_name}{i}"
+        saving_dir = f"{RESULTS_FOLDER}/models/model{model_num}/{model_name}{i}"
         maybe_mkdir(".", saving_dir) # make folder to store the models
         model_iter = model(i) # classifier
         model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], saving_dir, dataset_info, holdout_size=None, num_holdouts=0)
@@ -40,7 +41,7 @@ def model_training_loop(model, model_name, metric_range, metric_type,
 
 def model_load_loop(model, model_name:str, metric_range:tuple, metric_type:str, 
                      num_dataset:int, num_repeat:int, model_num:int, 
-                    result_num:int, dataset_info:dict, num_holdouts:int, holdout_size:int):#from_download:bool = False):
+                    result_num:int, dataset_info:dict, num_holdout:int, holdout_size:int):#from_download:bool = False):
     """
     model (method) = a method that returns a model
     model_name (string) = actual name of the model, only for logging
@@ -52,7 +53,7 @@ def model_load_loop(model, model_name:str, metric_range:tuple, metric_type:str,
     dataset_name (string) = only for logging
     result_number (int) = where to store our result, like a result trial number
 
-    num_holdouts (int) = number of holdout sets gathered from
+    num_holdout (int) = number of holdout sets gathered from
     holdout_size (int) = size of each holdout set
     """
     start = time()
@@ -61,7 +62,7 @@ def model_load_loop(model, model_name:str, metric_range:tuple, metric_type:str,
         trial_start = time()
         maybe_mkdir(".", f"{RESULTS_FOLDER}/results/trial{model_num}") # make folder to store the LDMs
         model_iter = model(i) # classifier
-        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], f"{RESULTS_FOLDER}/model{model_num}/{model_name}{i}", dataset_info, holdout_size, num_holdouts)
+        model_generator = Inductive_Generator.Inductive_Generator("sparse", model_iter, [0,1], f"{RESULTS_FOLDER}/models/model{model_num}/{model_name}{i}", dataset_info, holdout_size, num_holdout)
         model_generator.getN_LDM_Pf(dataset_info["X_test"], dataset_info["y_test"], num_dataset, num_repeat, 0.15, from_download= True)
         model_generator.save_state(f"{RESULTS_FOLDER}/results/trial{model_num}/model_{model_num}_{model_name}_{i}.json", f"{model_name}{i}", dataset_info["dataset_name"])
         trial_end = time()
@@ -176,12 +177,14 @@ if __name__ == "__main__":
     elif argv_dataset in "Obesity":
         dataset = "Obesity.csv"
     elif argv_dataset in "Shopper_Intention":
-        dataset = "Shopper_Intention.csv"        
+        dataset = "Shopper_Intention.csv"    
+    elif argv_dataset in "Shopper_Intention_Balanced":
+        dataset = "Shopper_Intention_Balanced.csv"       
     elif argv_dataset in "Spam":
         dataset = "Spam.csv"
     elif argv_dataset in "Wine_Quality":
         dataset = "Wine_Quality.csv"
-    elif argv_dataset in "Semi_Random":
+    elif argv_dataset in "SemiRandom":
         dataset = "SemiRandom.csv"
     else:
         sys.exit("We don't have that dataset. All that we have is ", os.listdir("datasets"))
@@ -267,7 +270,7 @@ if __name__ == "__main__":
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
         model_load_loop(model=model, model_name=model_name, metric_range=np.arange(lower_range, upper_range, step), 
                         metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=model_num,
-                        dataset_info=dataset_info, result_num=model_num, num_holdouts=num_holdout_sets, holdout_size=holdout_set_size)
+                        dataset_info=dataset_info, result_num=model_num, num_holdout=num_holdout_sets, holdout_size=holdout_set_size)
     else:
         print("Must enter 'training' or 'inference'")
         #TODO: implement non-looping generic setup

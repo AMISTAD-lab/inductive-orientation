@@ -10,21 +10,21 @@
 
 
 # for analysis
-readonly TRIAL_NUM=3
-readonly MODEL_NUM=3
-readonly SIZE_HOLDOUT=10
+readonly TRIAL_NUM=4
+readonly MODEL_NUM=4
+readonly SIZE_HOLDOUT=5 # size of each holdout (not number of holdout sets)
 readonly SIZE_TARGET=4
-readonly MODEL_NAME=Decision_Tree_max_depth 
+readonly MODEL_NAME=Decision
 readonly DATASET_NAME=EEG_Eye_State
 # readonly TRIAL_NUM=1 already defined in analysis
-readonly PLOT_TITLE=Decision_tree
-readonly X_AXIS=Estimators
-readonly Y_AXIS=Metric
+readonly PLOT_TITLE=Decision_Tree_depth
+readonly X_AXIS=Depth
+readonly Y_AXIS=Metric # discontinued
 
 
 #python3 Trial_Setup_Utils.py EEG 10 5 DECISION_TREE inference 1
 #python3 Trial_Setup_Utils.py EEG 5 KNN 
 # python3 Trial_Setup_Utils.py $DATASET $NUMBER_HOLDOUT $HOLDOUT_SIZE $MODEL $MODE $MODEL_NUMBER 
 
-python3 run_analysis.py $TRIAL_NUM $MODEL_NUM $SIZE_HOLDOUT $SIZE_TARGET
+python3 run_analysis.py --trial_num $TRIAL_NUM --model_num $MODEL_NUM --holdout_size $SIZE_HOLDOUT
 python3 run_graphing.py $DATASET_NAME $TRIAL_NUM $MODEL_NAME $PLOT_TITLE $X_AXIS $Y_AXIS 

@@ -47,7 +47,7 @@ if __name__ == "__main__":
     
     # if SIZE_TARGET > SIZE_HOLDOUT:
     #     sys.exit("target set must be a subset of the holdout set.")
-
+    
     with open(os.path.join(f"{RESULTS_FOLDER}/results/trial{TRIAL_NUM}", os.listdir(f"{RESULTS_FOLDER}/results/trial{TRIAL_NUM}")[0])) as logs:
         SAVED_STATE = json.loads(logs.read(), cls = Inductive_Generator.Inductive_Generator_Decoder)
         DATASET_NAME = SAVED_STATE["dataset"] + ".csv"
@@ -79,7 +79,6 @@ if __name__ == "__main__":
 
 
     # Gather target sets (of multiple sizes)
-    #targets = [] 
     target_sets = [] # each target list in target_sets corresponds to specific holdout set
 
     for holdout_set_y in holdout_sets_y:

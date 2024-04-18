@@ -29,6 +29,7 @@ readonly UPPER_RANGE=3
 # RUNS BOTH TRAINING AND INFERENCE
 #python3 Trial_Setup_Utils.py EEG 10 5 DECISION_TREE inference 1
 #python3 Trial_Setup_Utils.py EEG 5 KNN 
-python3 Trial_Setup_Utils.py $DATASET $NUMBER_HOLDOUT $HOLDOUT_SIZE $MODEL training $LOWER_RANGE $UPPER_RANGE
-python3 Trial_Setup_Utils.py $DATASET $NUMBER_HOLDOUT $HOLDOUT_SIZE $MODEL inference $LOWER_RANGE $UPPER_RANGE $MODEL_NUMBER
+python3 Trial_Setup_Utils.py --dataset $DATASET --num_holdout $NUMBER_HOLDOUT --size_holdout $HOLDOUT_SIZE --model_name $MODEL --mode training --lower $LOWER_RANGE --upper $UPPER_RANGE
+python3 Trial_Setup_Utils.py --dataset $DATASET --num_holdout $NUMBER_HOLDOUT --size_holdout $HOLDOUT_SIZE --model_name $MODEL --mode inference --lower $LOWER_RANGE --upper $UPPER_RANGE --model_num $MODEL_NUMBER
 
+# python3 Trial_Setup_Utils.py --dataset $DATASET --num_holdout $NUMBER_HOLDOUT --size_holdout $HOLDOUT_SIZE --model_name $MODEL --mode training --lower $LOWER_RANGE --upper $UPPER_RANGE
