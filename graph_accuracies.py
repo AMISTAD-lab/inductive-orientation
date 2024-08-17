@@ -14,6 +14,7 @@ from constants import RESULTS_FOLDER
 from Trial_Setup_Utils import maybe_mkdir
 from tqdm import tqdm
 import argparse
+import pdb
 
 
 
@@ -82,7 +83,7 @@ def get_accuracies(model_directory, X, y, saving_dir=None):
                 "train std" : train_accuracies_std, "counts" : counts}
         df=pd.DataFrame(data)
         df = df.sort_values(by = "parameters")
-        df.to_csv(os.path.join(saving_dir, "test_train_accuracies.csv"))
+        df.to_csv(os.path.join(saving_dir, "test_train_accuracies_CORRECTED.csv"))
 
     return df
 
@@ -121,7 +122,7 @@ def plot_accuracies(model_name:str, data_path:str, saving_dir): #model_name, mod
     ax.legend()
 
     # Show the plot
-    plt.savefig(os.path.join(saving_dir, "test_train_accuracies.pdf"))
+    plt.savefig(os.path.join(saving_dir, "test_train_accuracies_CORRECTED.pdf"))
     plt.close()
 
 def get_chars_before_first_number_re(s):
@@ -144,11 +145,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Trains models and Creates LDM')
     parser.add_argument('--model_num', type=int, help='the past experiment that generated models (only used during inference)', required=True)
     parser.add_argument('--dataset', type=str, help='provide the name of the dataset', required=True)
-
+    
     args = parser.parse_args()
     trial_num = args.model_num
     dataset = get_dataset(args.dataset)
-
+        
+    # print(f"got arguments")
     # define inputs X and outputs y
     dataset_name = dataset.split(".")[0]
     dataset = os.path.join("datasets", dataset)
@@ -157,18 +159,20 @@ if __name__ == "__main__":
     X = X.iloc[:,:].values
     y = data[data.columns[-1]]
     y = y.values
+    # print("Defined X and y")
 
     model_directory = f"{RESULTS_FOLDER}/models/model{trial_num}"
     # figure_saving_path = f"{RESULTS_FOLDER}"
     
     figure_saving_dir = maybe_mkdir(RESULTS_FOLDER, f"analysis/trial{trial_num}")
-
     # parameters, test_accuracies_averages, train_accuracies_averages, test_accuracies_std, train_accuracies_std \
     #     = get_accuracies(model_directory, X, y)
+    
     train_accuracies_df = get_accuracies(model_directory, X, y, saving_dir=figure_saving_dir)
     
+    # print("Called get_accuracies\n\n")
     model_name = get_chars_before_first_number_re(os.listdir(model_directory)[0])
-    data_path = os.path.join(figure_saving_dir, "test_train_accuracies.csv")
+    data_path = os.path.join(figure_saving_dir, "test_train_accuracies_CORRECTED.csv")
     plot_accuracies(model_name, data_path, figure_saving_dir)
 
         

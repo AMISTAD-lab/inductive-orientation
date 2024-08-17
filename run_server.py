@@ -6,10 +6,16 @@ EEG_EYE_STATE = "EEG_Eye_State"
 SEMIRANDOM = "SemiRandom"
 SHOPPER_INTENTION = "Shopper_Intention"
 SHOPPER_INTENTION_BALANCED = "Shopper_Intention_Balanced"
-datasets = [SHOPPER_INTENTION_BALANCED] # "Shopper_Intention" EEG_Eye_State
+datasets = [DatasetNames.BANK_MARKETING.value, 
+            DatasetNames.ABALONE.value, 
+            DatasetNames.CAR_EVALUATION.value, 
+            DatasetNames.LETTER_RECOGNITION.value, 
+            DatasetNames.OBESITY.value,
+            DatasetNames.SPAM.value,
+            DatasetNames.WINE_QUALITY.value]#[EEG_EYE_STATE, SEMIRANDOM, SHOPPER_INTENTION] # "Shopper_Intention" EEG_Eye_State
 num_holdouts = [100]
 holdout_sizes = [5]
-starting_experiment = 200
+starting_experiment = 400
 
 # exp_params = [{"model": "KNN", "lower_range": 1, "upper_range":4}]
 exp_params = [{"model": ModelNamesMetrics.KNN_NEIGHBORS.value, "lower_range": 1, "upper_range":200, "step": 5, "x-axis": "neighbors", "y-axis": "metric"},
@@ -30,17 +36,20 @@ for i, (dataset, num_holdout, holdout_size, exp_param) in enumerate(product(data
     "--upper", str(exp_param["upper_range"]), "--step", str(exp_param["step"]), "--model_num", str(current_experiment)]
     subprocess.run(training_args)
     
-    inference_args = ["python3", "Trial_Setup_Utils.py", "--dataset", dataset, "--num_holdout", str(num_holdout), "--size_holdout", str(holdout_size), "--model_name", exp_param["model"], "--mode", "inference", "--lower", str(exp_param["lower_range"]), "--upper", str(exp_param["upper_range"]), "--model_num", str(current_experiment), "--step", str(exp_param["step"])]
+    inference_args = ["python3", "Trial_Setup_Utils.py", "--dataset", dataset, "--num_holdout", str(num_holdout), \
+                      "--size_holdout", str(holdout_size), "--model_name", exp_param["model"], "--mode", "inference",\
+                      "--lower", str(exp_param["lower_range"]), "--upper", str(exp_param["upper_range"]), "--model_num",\
+                        str(current_experiment), "--step", str(exp_param["step"])]
     subprocess.run(inference_args)
     
-    analysis_args = ["python3", "run_analysis.py", "--trial_num", str(current_experiment), "--model", str(current_experiment), "--holdout_size", str(holdout_size)]
-    subprocess.run(analysis_args)
+    # analysis_args = ["python3", "run_analysis.py", "--trial_num", str(current_experiment), "--model", str(current_experiment), "--holdout_size", str(holdout_size)]
+    # subprocess.run(analysis_args)
 
-    graphing_args = ["python3", "run_graphing.py",  dataset, str(current_experiment), exp_param["model"], exp_param["model"], exp_param["x-axis"], exp_param["y-axis"]]
-    subprocess.run(graphing_args)
+    # graphing_args = ["python3", "run_graphing.py",  dataset, str(current_experiment), exp_param["model"], exp_param["model"], exp_param["x-axis"], exp_param["y-axis"]]
+    # subprocess.run(graphing_args)
 
-    accuracies_args = ["python3", "graph_accuracies.py",  "--dataset", dataset, "--model_num", str(current_experiment)]
-    subprocess.run(accuracies_args)
+    # accuracies_args = ["python3", "graph_accuracies.py",  "--dataset", dataset, "--model_num", str(current_experiment)]
+    # subprocess.run(accuracies_args)
 
 # RUNS BOTH TRAINING AND INFERENCE
 # python3 Trial_Setup_Utils.py --dataset $DATASET --num_holdout $NUMBER_HOLDOUT --size_holdout $HOLDOUT_SIZE --model_name $MODEL --mode training --lower $LOWER_RANGE --upper $UPPER_RANGE

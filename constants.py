@@ -18,6 +18,13 @@ class DatasetNames(Enum):
     SEMIRANDOM = "SemiRandom"
     SHOPPER_INTENTION = "Shopper_Intention"
     SHOPPER_INTENTION_BALANCED = "Shopper_Intention_Balanced"
+    ABALONE = "Abalone"
+    BANK_MARKETING = "Bank_Marketing"
+    CAR_EVALUATION = "Car_Evaluation"
+    LETTER_RECOGNITION = "Letter_Recognition"
+    OBESITY = "Obesity"
+    SPAM = "Spam"
+    WINE_QUALITY = "Wine_Quality"
 
 # TODO: add an Enum for metric types
 class MetricNames(Enum):
