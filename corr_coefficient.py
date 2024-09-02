@@ -56,6 +56,7 @@ if __name__=="__main__":
         for dataset in DatasetNames:
             for trial_num in MODEL_TO_TRIAL_NUMS[alg.value][dataset.value]: 
                 # print(alg.value, dataset.value, t)
+                if trial_num < 400: continue
                 trial_folder = f"{RESULTS_FOLDER}/analysis/trial{trial_num}"
                 print(f"trial folder: {trial_folder}")
 
@@ -65,7 +66,7 @@ if __name__=="__main__":
                 corr_coef_lines.append(json_line)
                 break # only do first trial (later trials test a subset of the parameter range)
 
-    with open("correlation_coefficients_CORRECTED.jsonl", "w") as f:
+    with open("correlation_coefficients.jsonl", "w") as f:
         for item in corr_coef_lines:
             f.write(json.dumps(item) + '\n')
 
