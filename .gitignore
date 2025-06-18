@@ -6,8 +6,8 @@ datasets
 logs
 *.out
 *.pdf
-*.csv
 *.pkl
 *json
 venv
+new_env
 inductive-orientation
