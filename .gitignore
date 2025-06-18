@@ -9,4 +9,5 @@ logs
 *.csv
 *.pkl
 *json
+venv
 inductive-orientation
