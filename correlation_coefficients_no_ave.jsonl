@@ -1,0 +1,11 @@
+{"algorithm_name": "Decision_Tree_max_depth", "dataset_name": "EEG_Eye_State", "exp_cap_corr_coeff_ave": 0.9631348194613396, "exp_cap_corr_coeff_std": 0.013669320622965036, "trial_num": 301}
+{"algorithm_name": "Decision_Tree_max_depth", "dataset_name": "SemiRandom", "exp_cap_corr_coeff_ave": 0.9831087572732631, "exp_cap_corr_coeff_std": 0.006116108443932791, "trial_num": 309}
+{"algorithm_name": "Decision_Tree_max_depth", "dataset_name": "Shopper_Intention", "exp_cap_corr_coeff_ave": 0.8777178343067038, "exp_cap_corr_coeff_std": 0.25459400827589906, "trial_num": 317}
+{"algorithm_name": "Decision_Tree_max_depth", "dataset_name": "Shopper_Intention_Balanced", "exp_cap_corr_coeff_ave": NaN, "exp_cap_corr_coeff_std": NaN, "trial_num": 325}
+{"algorithm_name": "Decision_Tree_max_depth", "dataset_name": "Bank_Marketing", "exp_cap_corr_coeff_ave": 0.9762425748383379, "exp_cap_corr_coeff_std": 0.012743793926191946, "trial_num": 402}
+{"algorithm_name": "Decision_Tree_max_depth", "dataset_name": "Abalone", "exp_cap_corr_coeff_ave": 0.9820106282230521, "exp_cap_corr_coeff_std": 0.0077873915159043725, "trial_num": 411}
+{"algorithm_name": "Decision_Tree_max_depth", "dataset_name": "Car_Evaluation", "exp_cap_corr_coeff_ave": 0.8123420140088772, "exp_cap_corr_coeff_std": 0.20452864790399794, "trial_num": 420}
+{"algorithm_name": "Decision_Tree_max_depth", "dataset_name": "Letter_Recognition", "exp_cap_corr_coeff_ave": 0.6865876208633886, "exp_cap_corr_coeff_std": 0.09251504800176728, "trial_num": 429}
+{"algorithm_name": "Decision_Tree_max_depth", "dataset_name": "Obesity", "exp_cap_corr_coeff_ave": NaN, "exp_cap_corr_coeff_std": NaN, "trial_num": 438}
+{"algorithm_name": "Decision_Tree_max_depth", "dataset_name": "Spam", "exp_cap_corr_coeff_ave": 0.9285786167887419, "exp_cap_corr_coeff_std": 0.03985337206450978, "trial_num": 447}
+{"algorithm_name": "Decision_Tree_max_depth", "dataset_name": "Wine_Quality", "exp_cap_corr_coeff_ave": NaN, "exp_cap_corr_coeff_std": NaN, "trial_num": 500}

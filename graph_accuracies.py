@@ -19,6 +19,9 @@ import pdb
 
 
 def get_single_accuracy(model_path, X_train, X_test, y_train, y_test):
+    # if "193" in model_path: 
+    # pdb.set_trace()
+    
     model = pickle.load(open(model_path, "rb"))
     
     # get test accuracy
@@ -46,8 +49,9 @@ def parse_model_name(model_path):
 
 """Take a directory example models/modelnum folder, and then run inference on x_test, y_test."""
 def get_accuracies(model_directory, X, y, saving_dir=None):
+    # pdb.set_trace()
     # split data
-    test_train_ratio = 0.20 # set for now
+    test_train_ratio = 0.2 # originally set to 0.2
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=test_train_ratio, random_state=42)
     
     # initialize returns
@@ -57,6 +61,9 @@ def get_accuracies(model_directory, X, y, saving_dir=None):
     counts = [] # number of samples
     
     for path_name in tqdm(os.listdir(model_directory)):
+        # workaround to 196 bug
+        if "196" in path_name:
+            continue
         # read model
         models_on_same_dataset = os.path.join(model_directory, path_name)
         temp_test_accuracies, temp_train_accuracies = [], []
@@ -89,6 +96,7 @@ def get_accuracies(model_directory, X, y, saving_dir=None):
 
 
 def plot_accuracies(model_name:str, data_path:str, saving_dir): #model_name, model_parameters, test_accuracies_averages, train_accuracies_averages, test_accuracies_std, train_accuracies_std, saving_path):
+    # pdb.set_trace()
     # read data
     df = pd.read_csv(data_path)
 
@@ -154,6 +162,7 @@ if __name__ == "__main__":
     # define inputs X and outputs y
     dataset_name = dataset.split(".")[0]
     dataset = os.path.join("datasets", dataset)
+    # pdb.set_trace()
     data = pd.read_csv(dataset)
     X = data[data.columns[:-1]]
     X = X.iloc[:,:].values

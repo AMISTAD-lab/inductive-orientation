@@ -109,9 +109,16 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
     exp_cap_fig_ax.set_xlabel(plot_info["xlabel"])
     exp_cap_fig_ax.set_ylabel("Bits")
 
-    num_ticks = min(20, max(df["model_name"])-min(df["model_name"]))
-    tick_distance = (max(df["model_name"])-min(df["model_name"]))//num_ticks
-    plt.xticks(np.arange(min(df["model_name"]), max(df["model_name"])+1, tick_distance), fontsize=4)
+
+    try:
+        num_ticks = min(20, max(df["model_name"])-min(df["model_name"])) # 0.001 to help with divide by zero issue
+        tick_distance = (max(df["model_name"])-min(df["model_name"]))//num_ticks
+    except Exception:
+        num_ticks = 20
+        tick_distance = 0.01
+
+    # plt.xticks(np.arange(min(df["model_name"]), max(df["model_name"])+1, tick_distance), fontsize=4)
+    plt.xticks(np.arange(0, max(df["model_name"])+1, 10), fontsize=8)
     # plt.xticks(df["model_name"])
     plt.savefig(saving_path + "_exp_cap_sem.pdf")
     plt.close()
@@ -129,6 +136,97 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
         df[metric_std] = df[metric_type].apply(lambda x: np.std(x)/np.sqrt(np.size(x)))
         sns.lineplot(ax=alg_fig_ax, data=df, x="model_name", y=metric_mean, label=LABELS[metric_type])
         alg_fig_ax.fill_between(df["model_name"], df[metric_mean] - Z_SCORE*df[metric_std], df[metric_mean] + Z_SCORE*df[metric_std], alpha=0.2)
+    
+    
+    
+    alg_fig_ax.legend(handles=alg_fig_ax.get_lines()[:])
+    alg_fig_ax.set_title(f"{plot_info['title']}\nAlgorithmic Bias (95% interval)")
+    alg_fig_ax.set_xlabel(plot_info["xlabel"])
+    alg_fig_ax.set_ylabel("Bias")
+
+
+    # # PLOT exp upper bounds "exp_upper_k"
+    # for k in range(1,6):
+    #     sns.lineplot(ax)
+
+    num_ticks = min(20, max(df["model_name"])-min(df["model_name"]))
+    tick_distance = (max(df["model_name"])-min(df["model_name"]))//num_ticks
+    # plt.xticks(np.arange(min(df["model_name"]), max(df["model_name"])+1, tick_distance), fontsize=4)
+    plt.xticks(np.arange(0, max(df["model_name"])+1, 10), fontsize=8)
+
+    # plt.xticks(np.arange(min(df["model_name"]), max(df["model_name"])+1, 5.0))
+    # plt.xticks(df["model_name"])
+    plt.savefig(saving_path+f"_alg_sem.pdf")
+    plt.close()
+
+def individual_plot_mult_WITH_EXP_BOUND(df, title, xlabel, ylabel, saving_path):
+    """
+    USE THIS ONE
+    New plot function
+    """
+    plot_info = {"title":title, "xlabel":xlabel, "ylabel":ylabel}
+
+    
+    # print("path:", path)
+    # print("saving_path", saving_path)
+    # df = pd.read_pickle(path)
+    
+    # throw away all the models that doesn't have model_name in its name
+    # df = df[df["model_name"].apply(lambda x: model_name in x)] 
+
+    # throw away the part of the name that corresponds to the model trial number
+    df["model_name"] = df["model_name"].apply(lambda x: x.split("_")[-1])
+
+    # changes the model name to be a number respresenting its parameter
+    df["model_name"] = df["model_name"].apply(lambda x: re.split('(\d+)',x)[-2])
+    df["model_name"] = df["model_name"].apply(lambda x: int(x))
+    df = df.sort_values("model_name")
+    exp_cap_fig = plt.figure()
+    exp_cap_fig_ax = exp_cap_fig.add_subplot()
+    legend = {}
+    for i, metric_type in enumerate(["algorithmic_capacity", "entropic_expressivity"]):
+        metric_mean = metric_type + "_mean" # column names
+        metric_std = metric_type + "_std"
+
+
+        df[metric_mean] = df[metric_type].apply(lambda x: np.mean(x))
+        df[metric_std] = df[metric_type].apply(lambda x: np.std(x)/np.sqrt(np.size(x))) # actually the SEM 
+        sns.lineplot(ax=exp_cap_fig_ax, data=df, x="model_name", y=metric_mean, label=LABELS[metric_type])
+        exp_cap_fig_ax.fill_between(df["model_name"], df[metric_mean] - Z_SCORE*df[metric_std], df[metric_mean] + Z_SCORE*df[metric_std], alpha=0.2)
+    
+    # PLOT BIAS UPPER BOUNDS
+    for k in range(1,6):
+        sns.lineplot(ax=alg_fig_ax, data=df,x="model_name",y=f"exp_upper_{k}",label=f"Expressivity upper bound (thresh={k})")
+    # END ADDITION
+    
+    exp_cap_fig_ax.legend(handles=exp_cap_fig_ax.get_lines()[:])
+    exp_cap_fig_ax.set_title(f"{plot_info['title']}\nAlgorithmic Capacity & Entropic Expressivity (95% interval)")
+    exp_cap_fig_ax.set_xlabel(plot_info["xlabel"])
+    exp_cap_fig_ax.set_ylabel("Bits")
+
+    num_ticks = min(20, max(df["model_name"])-min(df["model_name"]))
+    tick_distance = (max(df["model_name"])-min(df["model_name"]))//num_ticks
+    plt.xticks(np.arange(min(df["model_name"]), max(df["model_name"])+1, tick_distance), fontsize=4)
+    # plt.xticks(df["model_name"])
+    plt.savefig(saving_path + "_exp_cap_sem_WITH_BOUNDS.pdf")
+    plt.close()
+
+#   Plot algorithmic bias
+    alg_fig = plt.figure()
+    alg_fig_ax = alg_fig.add_subplot()
+    legend = {}
+    algorithmic_bias_types = [title for title in df.columns if "algorithmic_bias" in title]
+    for i, metric_type in enumerate(algorithmic_bias_types):
+        metric_mean = metric_type + "_mean" # column names
+        metric_std = metric_type + "_std"
+
+        df[metric_mean] = df[metric_type].apply(lambda x: np.mean(x))
+        df[metric_std] = df[metric_type].apply(lambda x: np.std(x)/np.sqrt(np.size(x)))
+        sns.lineplot(ax=alg_fig_ax, data=df, x="model_name", y=metric_mean, label=LABELS[metric_type])
+        alg_fig_ax.fill_between(df["model_name"], df[metric_mean] - Z_SCORE*df[metric_std], df[metric_mean] + Z_SCORE*df[metric_std], alpha=0.2)
+    # PLOT BIAS UPPER BOUNDS
+    sns.lineplot(ax=alg_fig_ax, data=df,x="model_name",y="bias_upper")
+    # END ADDITION
     alg_fig_ax.legend(handles=alg_fig_ax.get_lines()[:])
     alg_fig_ax.set_title(f"{plot_info['title']}\nAlgorithmic Bias (95% interval)")
     alg_fig_ax.set_xlabel(plot_info["xlabel"])
@@ -138,7 +236,7 @@ def individual_plot_mult(path, saving_path, model_name, plot_info):
     plt.xticks(np.arange(min(df["model_name"]), max(df["model_name"])+1, tick_distance), fontsize=4)
     # plt.xticks(np.arange(min(df["model_name"]), max(df["model_name"])+1, 5.0))
     # plt.xticks(df["model_name"])
-    plt.savefig(saving_path+f"_alg_sem.pdf")
+    plt.savefig(saving_path+f"_alg_sem_WITH_BOUNDS.pdf")
     plt.close()
 
 if __name__ == "__main__":
@@ -189,7 +287,6 @@ if __name__ == "__main__":
     plot_info = {"title": argv_model, "xlabel": x_label, "ylabel": y_label}
     # individual_plot_mult("./../analysis/trial1/EEG.pkl", "./../analysis/trial1/EEG.pdf", "Decision Tree", plot_info)
     individual_plot_mult(f"{RESULTS_FOLDER}/analysis/trial{trial_num}/{argv_dataset}.pkl", f"{RESULTS_FOLDER}/analysis/trial{trial_num}/{argv_dataset}", argv_model, plot_info)
-
     # plot_info = {"title": "All Models on Shoppers Intention Dataset", "xlabel": "", "ylabel":""}
     # all_plots("./../trial19_target8.csv", "algorithmic_capacity", "./../plots/trial19_target8_capacity.pdf", plot_info)
     # all_plots("./../trial19_target8.csv", "entropic_expressivity", "./../plots/trial19_target8_expressivity.pdf", plot_info)

@@ -186,6 +186,10 @@ if __name__ == "__main__":
         dataset = "Wine_Quality.csv"
     elif argv_dataset in "SemiRandom":
         dataset = "SemiRandom.csv"
+    elif argv_dataset in "EEG_Eye_State_smaller":
+        dataset = "EEG_Eye_State_smaller.csv"
+    elif argv_dataset in "SemiRandom_smaller":
+        dataset = "SemiRandom_smaller.csv"
     else:
         sys.exit("We don't have that dataset. All that we have is ", os.listdir("datasets"))
     
@@ -256,12 +260,21 @@ if __name__ == "__main__":
         model = logistic_regression_max_iter
         model_name = ModelNamesMetrics.LOGISTIC_REGRESSION_MAX_ITER.value
         metric_type = "Max iterations"
+    elif argv_model.upper() in ModelNamesMetrics.MLP_LAYERS.value.upper():
+        model = MLP_hidden_layer
+        model_name = ModelNamesMetrics.MLP_LAYERS.value
+        metric_type = "Hidden Layers"
+    elif argv_model.upper() in ModelNamesMetrics.NEAREST_CENTROID_THRESHOLD.value.upper():
+        model = nearest_centroid
+        model_name = ModelNamesMetrics.NEAREST_CENTROID_THRESHOLD.value
+        metric_type = "Shrink Threshold"
     else:
-        print("Running all")
+        print("EXCEPTION: NOT VALID MODEL NAME")
         #TODO: implement thing to run all models
     
     
     if trial_mode == "training":
+        print(f"\nTraining Step: {np.arange(lower_range, upper_range, step)}")
         dataset_info = {"dataset_name": dataset_name, "X_train":X_train, "X_test": X_test, "y_train":y_train, "y_test":y_test}
         model_training_loop(model=model, model_name=model_name, metric_range=np.arange(lower_range, upper_range, step), 
                         metric_type=metric_type, num_dataset=100, num_repeat=5, model_num=model_num, 

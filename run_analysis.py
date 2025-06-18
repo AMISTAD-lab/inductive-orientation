@@ -92,5 +92,6 @@ if __name__ == "__main__":
     longer_summary = Algorithmic_Analysis.runAnalysis(f"{RESULTS_FOLDER}/results/trial{TRIAL_NUM}",target_sets)
     Trial_Setup_Utils.maybe_mkdir("./", f"{RESULTS_FOLDER}/analysis/trial{TRIAL_NUM}")
     longer_summary.to_pickle(f"{RESULTS_FOLDER}/analysis/trial{TRIAL_NUM}/{DATASET_NAME[:-4]}.pkl")
+    print(f"PICKLED {RESULTS_FOLDER}/analysis/trial{TRIAL_NUM}/{DATASET_NAME[:-4]}.pkl")
 
     

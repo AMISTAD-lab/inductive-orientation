@@ -211,9 +211,48 @@ def analyze_bds(bds: pd.DataFrame, aggregate_fn, sort: bool) -> pd.Series:
         aggregate_vals = aggregate_vals.sort_values()  # key = lambda x: -1*x if reverse
     return aggregate_vals
 
-
+def rank_models_by_dataset(bds_folders, aggregate_fn, saving_path, aggregate_name):
 # loads multiple datasets and then calls analyze_bds on all of them
 # and then performs the sorting
+    # an empty series (should be a dictionary, key will be metric type, value will be series)
+    series_dict = defaultdict(pd.Series)  # str: pd.Series
+    # loop through bds_folders
+    # bds_folders = '/data/big/erchen/inductive_orientation/heatmaps'
+    for model_name in os.listdir(bds_folders):
+        bds_dfs_saving_path = os.path.join(
+            bds_folders, model_name, f'{model_name}_BDF_dfs.pkl')
+
+        # calls load_bds_dfs_from_pickle
+        bds_dfs = load_bds_dfs_from_pickle(bds_dfs_saving_path)
+
+        # loop through the dfs aka different metrics
+        for metric in bds_dfs.keys():
+            bds = bds_dfs[metric]
+            # calls analyze_bds
+            aggregate_vals = analyze_bds(bds, aggregate_fn, sort=False)
+
+            # appends the model name to the series indexes
+            new_index = [
+                f'{model_name}-{parameter}' for parameter in aggregate_vals.index]
+            aggregate_vals.index = new_index
+
+            # appends the above series to the empty series corresponding to the right metric type
+            if metric in series_dict.keys():
+                series_dict[metric] = series_dict[metric]._append(
+                    aggregate_vals)
+            else:
+                series_dict[metric] = aggregate_vals
+
+    # loop through the metrics aka dictionary keys
+    for metric in series_dict.keys():
+        current_series = series_dict[metric]
+
+        # order the current series
+        current_series = current_series.sort_values()
+
+        # prints out as a csv that we can read
+        current_series.to_csv(os.path.join(
+            saving_path, f'{metric}_{aggregate_name}.csv'), index=True)
 
 def rank_models(bds_folders, aggregate_fn, saving_path, aggregate_name):
     # an empty series (should be a dictionary, key will be metric type, value will be series)

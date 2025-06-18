@@ -20,6 +20,8 @@ from sklearn.linear_model import LogisticRegression, PassiveAggressiveClassifier
 from sklearn.svm import SVC, LinearSVC
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import NearestCentroid
 
 # ensemble methods
 seed = 42 # set seed 
@@ -59,6 +61,10 @@ def decision_tree_max_depth(max_depth:int):
 def knn_n_neighbors(n_neigbors:int):
     return KNeighborsClassifier(n_neighbors =int(n_neigbors))
 
+def nearest_centroid(shrink_threshold:int):
+    threshold = float(shrink_threshold/100) + 1e-7
+    return NearestCentroid(shrink_threshold=threshold, metric='euclidean')
+
 def radiusnn_radius(radius:float):
     return RadiusNeighborsClassifier(radius=radius)
 
@@ -83,4 +89,6 @@ def c_SVC_max_iter(max_iter:int):
 
 # MLP models
 def MLP_hidden_layer(n_hidden_layers:int):
-    return MLPClassifier(hidden_layer_sizes=int(n_hidden_layers), random_state=seed)
+    return MLPClassifier(hidden_layer_sizes=int(n_hidden_layers), random_state=seed, max_iter=500)
+
+

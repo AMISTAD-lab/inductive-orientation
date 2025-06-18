@@ -70,24 +70,26 @@ def plot_and_save(data: pd.DataFrame, labels: List[str], saving_directory:str):
 
 if __name__ == "__main__":
     # input: all the bds
+    df = pd.read_pickle("/../../../data/big/erchen/inductive_orientation/analysis/trial205/Shopper_Intention_Balanced.pkl")
+    print(df.head(10))
 
-    metric_type = constants.MetricNames.ALGORITHMIC_CAPACITY.value 
+    # metric_type = constants.MetricNames.ALGORITHMIC_CAPACITY.value 
     
-    models_names = [constants.ModelNamesMetrics.KNN_NEIGHBORS.value,
-                    constants.ModelNamesMetrics.DECISION_TREE_MAX_DEPTH.value,
-                    constants.ModelNamesMetrics.RANDOM_FOREST_DEPTH.value,
-                    constants.ModelNamesMetrics.ADABOOST_ESTIMATORS.value,
-                    constants.ModelNamesMetrics.C_SUPPORT_SVC_MAX_ITER.value,
-                    constants.ModelNamesMetrics.LINEAR_SVC_MAX_ITER.value,
-                    constants.ModelNamesMetrics.LOGISTIC_REGRESSION_MAX_ITER.value,
-                    constants.ModelNamesMetrics.RANDOM_FOREST_ESTIMATORS.value]
+    # models_names = [constants.ModelNamesMetrics.KNN_NEIGHBORS.value,
+    #                 constants.ModelNamesMetrics.DECISION_TREE_MAX_DEPTH.value,
+    #                 constants.ModelNamesMetrics.RANDOM_FOREST_DEPTH.value,
+    #                 constants.ModelNamesMetrics.ADABOOST_ESTIMATORS.value,
+    #                 constants.ModelNamesMetrics.C_SUPPORT_SVC_MAX_ITER.value,
+    #                 constants.ModelNamesMetrics.LINEAR_SVC_MAX_ITER.value,
+    #                 constants.ModelNamesMetrics.LOGISTIC_REGRESSION_MAX_ITER.value,
+    #                 constants.ModelNamesMetrics.RANDOM_FOREST_ESTIMATORS.value]
 
-    bds, labels = load_and_merge_bds(models_names, metric_type)
+    # bds, labels = load_and_merge_bds(models_names, metric_type)
     
-    model_type_label = [label.split("-")[0] for label in labels]
-    # apply pca
-    bds_2d = perform_pca(bds)
+    # model_type_label = [label.split("-")[0] for label in labels]
+    # # apply pca
+    # bds_2d = perform_pca(bds)
     
     
-    # plot
-    plot_and_save(bds_2d, model_type_label, saving_directory=".")
+    # # plot
+    # plot_and_save(bds_2d, model_type_label, saving_directory=".")
